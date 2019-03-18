@@ -13,12 +13,22 @@ STATIC_LIBRARIES =
 DLIBRARIES_PATH =
 DYNAMIC_LIBRARIES =
 
+# Unit tests settings
+EXCLUDE_FILES = main.cpp
+TESTS_MK = tests.mk
+UTEST_DIR = tests
+UTEST_BUILD_DIR = $(BUILD_DIR)/$(UTEST_DIR)
+UTEST_LD = boost_unit_test_framework
+
 # Compiler and linker settings
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -MMD
 CXXEXTRAFLAGS = $(addprefix -I, $(INCLUDES)) $(addprefix -D, $(MACROS))
 LDLIBS = $(addprefix -l, $(DYNAMIC_LIBRARIES))
 LDFLAGS = $(addprefix -L, $(DLIBRARIES_PATH))
+
+# Static library builder
+ARRVS = ar rvs
 
 # Defines src path and source file extensions
 VPATH = src: $(SRC_DIR)
@@ -33,8 +43,16 @@ INCLUDE_FILES = $(shell find $(HEADER_DIR) -type f \( -name "*.hpp" \) )
 OBJS_FILES = $(subst $(SRC_DIR)/,$(BUILD_DIR)/,$(SRC_FILES))
 OBJS_FILES := $(addsuffix $(OBJ_EXTENSION), $(OBJS_FILES))
 
+# Define set object files for unit tests
+EXCLUDE_OBJS = $(addprefix $(BUILD_DIR)/, $(EXCLUDE_FILES))
+EXCLUDE_OBJS := $(addsuffix $(OBJ_EXTENSION), $(EXCLUDE_OBJS))
+OBJS_UTEST_FILES  = $(filter-out $(EXCLUDE_OBJS), $(OBJS_FILES))
+
 # Set dependencies objects
 DEPS = $(OBJS_FILES:$(OBJ_EXTENSION)=$(DEPENDENCE_EXTENSION))
+
+# Set default static library for unit tests
+l?=$(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a
 
 # *********************************** RULES ************************************
 .PHONY: all clean run test
@@ -55,6 +73,15 @@ $(BUILD_DIR)/%$(OBJ_EXTENSION): $(SRC_DIR)/%
 # Run
 run: $(BUILD_DIR)/$(PROJECT_NAME)
 	./$(BUILD_DIR)/$(PROJECT_NAME)
+
+# Unit Tests builder
+test: $(l)
+	@mkdir -p $(UTEST_BUILD_DIR)
+	$(MAKE) -f $(TESTS_MK) $(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) ls="$(l) $(ls)" i="$(HEADER_DIR) $(i)" ld="$(UTEST_LD) $(ld)"
+	./$(UTEST_BUILD_DIR)/$(notdir $(basename $(t)))
+
+$(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a: $(OBJS_UTEST_FILES)
+	@$(ARRVS) $@ $^
 
 # Include all .d files
 -include $(DEPS)
