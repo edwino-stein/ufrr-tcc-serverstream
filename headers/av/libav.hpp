@@ -24,6 +24,7 @@
         class CodecVideo;
         class Format;
         class FormatInput;
+        class FormatOutput;
 
         //Interfaces
     }
