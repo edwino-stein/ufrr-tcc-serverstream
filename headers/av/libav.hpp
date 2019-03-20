@@ -27,6 +27,7 @@
         class FormatOutput;
 
         //Interfaces
+        class DecodeListener;
     }
 
 #endif
