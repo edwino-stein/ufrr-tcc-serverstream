@@ -28,6 +28,7 @@
 
         //Interfaces
         class DecodeListener;
+        class EncodeListener;
     }
 
 #endif
