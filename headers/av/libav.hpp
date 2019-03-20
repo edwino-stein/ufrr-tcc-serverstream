@@ -20,6 +20,7 @@
         void initAll();
 
         //Classes
+        class Codec;
 
         //Interfaces
     }
