@@ -21,6 +21,6 @@ build/tests/%.cpp.o: %.cpp
 
 # Generic runtime builder
 build/tests/%: build/tests/%.cpp.o
-	$(CXX) $(CXXFLAGS) $< $(LSLIBS) -o $@ $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) -rdynamic $< $(LSLIBS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 # Custom builders put here

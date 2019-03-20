@@ -11,14 +11,14 @@ INCLUDES = $(HEADER_DIR)
 MACROS =
 STATIC_LIBRARIES =
 DLIBRARIES_PATH =
-DYNAMIC_LIBRARIES =
+DYNAMIC_LIBRARIES = boost_system dl
 
 # Unit tests settings
 EXCLUDE_FILES = main.cpp
 TESTS_MK = tests.mk
 UTEST_DIR = tests
 UTEST_BUILD_DIR = $(BUILD_DIR)/$(UTEST_DIR)
-UTEST_LD = boost_unit_test_framework
+UTEST_LD = boost_unit_test_framework $(DYNAMIC_LIBRARIES)
 
 # Compiler and linker settings
 CXX = g++
@@ -63,7 +63,7 @@ clean:
 #Runtime builder
 $(PROJECT_NAME): $(BUILD_DIR)/$(PROJECT_NAME)
 $(BUILD_DIR)/$(PROJECT_NAME): $(OBJS_FILES)
-	$(CXX) $(CXXFLAGS) $< $(STATIC_LIBRARIES) -o $@ $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) -rdynamic $(OBJS_FILES) $(STATIC_LIBRARIES) -o $@ $(LDFLAGS) $(LDLIBS)
 
 # Objects builder
 $(BUILD_DIR)/%$(OBJ_EXTENSION): $(SRC_DIR)/%
@@ -77,11 +77,11 @@ run: $(BUILD_DIR)/$(PROJECT_NAME)
 # Unit Tests builder
 test: $(l)
 	@mkdir -p $(UTEST_BUILD_DIR)
-	$(MAKE) -f $(TESTS_MK) $(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) ls="$(l) $(ls)" i="$(HEADER_DIR) $(i)" ld="$(UTEST_LD) $(ld)"
-	./$(UTEST_BUILD_DIR)/$(notdir $(basename $(t)))
+	$(MAKE) -f $(TESTS_MK) $(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) ls="$(l) $(ls)" i="$(INCLUDES) $(i)" ld="$(UTEST_LD) $(ld)"
+	./$(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) --log_level=all
 
 $(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a: $(OBJS_UTEST_FILES)
-	@$(ARRVS) $@ $^
+	@$(ARRVS) $@ $(OBJS_UTEST_FILES)
 
 # Include all .d files
 -include $(DEPS)
