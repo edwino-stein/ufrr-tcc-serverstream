@@ -2,6 +2,15 @@
 
 build/
 
+### Video Files ###
+*.mp4
+*.webm
+*.mkv
+*.mts
+*.mpeg
+*.mpg
+*.h264
+
 ### C++ ###
 # Prerequisites
 *.d
