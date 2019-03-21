@@ -12,6 +12,10 @@
                 AVCodec *_codec;
                 AVCodecContext *_codecCtx;
 
+                virtual void initCodec()=0;
+                virtual void initCodec(AFunction<void(AVCodecContext *, AVCodec *)> setupCodec)=0;
+                virtual void closeCodec()=0;
+
             public:
 
                 AVCodec * const &codec;
@@ -20,9 +24,9 @@
                 Codec();
                 virtual ~Codec();
 
+                virtual void init()=0;
                 virtual void init(json::JsonObject cfg)=0;
-                virtual void close();
-
+                virtual void close()=0;
                 virtual void rescaleTs(AVPacket *packet) const =0;
 
                 static enum AVCodecID getCodecIdByName(String codecName);
