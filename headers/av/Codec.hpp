@@ -26,6 +26,8 @@
                 virtual void rescaleTs(AVPacket *packet) const =0;
 
                 static enum AVCodecID getCodecIdByName(String codecName);
+                static bool supportsPixFmt(String codecName, enum AVPixelFormat pixFmt);
+                static enum AVPixelFormat getPixFmtByName(String pixFmtName);
         };
     }
 

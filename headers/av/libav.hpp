@@ -9,6 +9,7 @@
         #include <libavfilter/avfilter.h>
         #include <libavformat/avformat.h>
         #include <libavutil/avutil.h>
+        #include <libavutil/pixdesc.h>
         #include <libavformat/avio.h>
         #include <libavfilter/buffersink.h>
         #include <libavfilter/buffersrc.h>
