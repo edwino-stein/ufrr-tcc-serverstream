@@ -28,6 +28,7 @@
         class FormatOutput;
         class VideoInput;
         class VideoOutput;
+        class VideoFileInput;
 
         //Interfaces
         class DecodeListener;
