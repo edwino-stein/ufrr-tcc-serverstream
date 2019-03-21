@@ -6,18 +6,9 @@ Format::Format() : formatCtx(_formatCtx){
     this->_formatCtx = NULL;
 }
 
-Format::~Format(){
-    // TODO: verificar como liberar a memoria do jeito certo
-    this->close();
-}
+Format::~Format(){}
 
-void Format::close(){
-
-    if(this->_formatCtx != NULL){
-
-        if(this->_formatCtx->pb != NULL) avio_close(this->_formatCtx->pb);
-        
-        av_free(this->_formatCtx);
-        this->_formatCtx = NULL;
-    }
+void Format::dump(String label, bool isOutput) const {
+    if(this->formatCtx == NULL) return;
+    av_dump_format(this->formatCtx, 0, label.c_str(), isOutput ? 1 : 0);
 }

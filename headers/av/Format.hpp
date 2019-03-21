@@ -10,6 +10,13 @@
             protected:
                 AVFormatContext *_formatCtx;
 
+                virtual void openFile(String &fileName)=0;
+                virtual void initFormat(String demuxer, String codec)=0;
+                virtual void closeFile()=0;
+                virtual void closeFormat()=0;
+
+                void dump(String label, bool isOutput) const;
+
             public:
 
                 AVFormatContext * const &formatCtx;
@@ -17,7 +24,6 @@
                 Format();
                 virtual ~Format();
 
-                virtual void close();
                 virtual void dump() const =0;
         };
     }
