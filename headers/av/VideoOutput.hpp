@@ -8,15 +8,25 @@
 
         class VideoOutput : public av::CodecVideo, public av::FormatOutput {
 
+            protected:
+                virtual void openFile(String &fileName) override;
+                virtual void initFormat(String demuxer, String codec) override;
+                virtual void initVideoStream() override;
+                virtual void initCodec() override;
+                virtual void initCodec(AFunction<void(AVCodecContext *, AVCodec *)> setupCodec) override;
+
+                virtual void closeFile() override;
+                virtual void closeFormat() override;
+                virtual void closeCodec() override;
+
             public:
 
                 VideoOutput();
                 virtual ~VideoOutput();
 
                 virtual void rescaleTs(AVPacket *packet) const override;
-                virtual void close() override;
-
                 virtual void encode(AVFrame *frame, EncodeListener *listener) const;
+
         };
     }
 
