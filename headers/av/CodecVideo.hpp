@@ -12,6 +12,8 @@
                 int _videoStreamIdx;
                 AVStream *_videoStream;
 
+                virtual void initVideoStream()=0;
+
             public:
 
                 int const &videoStreamIdx;
