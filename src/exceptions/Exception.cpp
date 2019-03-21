@@ -1,10 +1,19 @@
 #include "exceptions/Exception.hpp"
-#include <sstream>
 
 #include <iostream>
+#include <sstream>
 
 using namespace exceptions;
 using stacktrace = boost::stacktrace::stacktrace;
+
+Exception::Exception() : st(stacktrace()), message(_message), prev(_prev){
+    this->init(
+        "exceptions::Exception",
+        NULL,
+        2,
+        1
+    );
+}
 
 Exception::Exception(const Exception &e) : st(e.st), message(_message), prev(_prev) {
     this->init(

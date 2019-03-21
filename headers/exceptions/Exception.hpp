@@ -20,11 +20,13 @@
                 virtual void init(String message, Exception *prev, const size_t stib, const size_t stit);
                 virtual String decodeST() const;
 
+
             public:
 
                 String const &message;
                 Exception * const &prev;
 
+                Exception();
                 Exception(const Exception &e);
                 Exception(String message);
                 Exception(String message, const Exception &prev);
