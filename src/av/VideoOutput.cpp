@@ -41,7 +41,7 @@ void VideoOutput::encode(AVFrame *frame, EncodeListener *listener) const {
     av_packet_free(&packet);
 }
 
-void VideoOutput::openFile(String &fileName){
+void VideoOutput::openFile(String &fileName, AVDictionary **options){
 
     if(this->formatCtx == NULL)
         throw AvErrorException(AVERROR_INVALIDDATA, Exception("Video format not initialized"));

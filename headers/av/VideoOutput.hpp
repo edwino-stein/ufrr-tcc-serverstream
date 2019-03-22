@@ -9,7 +9,7 @@
         class VideoOutput : public av::CodecVideo, public av::FormatOutput {
 
             protected:
-                virtual void openFile(String &fileName) override;
+                virtual void openFile(String &fileName, AVDictionary **options = NULL) override;
                 virtual void initFormat(String demuxer, String codec) override;
                 virtual void initVideoStream() override;
                 virtual void initCodec() override;

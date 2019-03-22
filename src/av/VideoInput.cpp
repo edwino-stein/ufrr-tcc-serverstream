@@ -24,6 +24,8 @@ void VideoInput::rescaleTs(AVPacket *packet) const {
 
 void VideoInput::decode(AVPacket *packet, DecodeListener *listener) const {
 
+    if(packet->stream_index != this->videoStreamIdx) return;
+
     int r;
 
     r = avcodec_send_packet(this->codecCtx, packet);
@@ -39,15 +41,15 @@ void VideoInput::decode(AVPacket *packet, DecodeListener *listener) const {
     av_frame_free(&frame);
 }
 
-void VideoInput::openFile(String &filename){
+void VideoInput::openFile(String &filename, AVDictionary **options){
 
     int r = 0;
 
     r = avformat_open_input(
         &(this->_formatCtx),
         filename.c_str(),
-        NULL,
-        NULL
+        this->format,
+        options
     );
 
     if(r < 0)
@@ -106,7 +108,7 @@ void VideoInput::initCodec(){
         throw AvErrorException(AVERROR_DECODER_NOT_FOUND, ReturnValueException("avcodec_find_decoder", "NULL"));
 
     this->_codecCtx = avcodec_alloc_context3(this->codec);
-    if(this->_codecCtx == NULL)
+    if(this->codecCtx == NULL)
         throw AvErrorException(AVERROR_DECODER_NOT_FOUND, ReturnValueException("avcodec_alloc_context3", "NULL"));
 
     r = avcodec_parameters_to_context(this->codecCtx, this->videoStream->codecpar);
