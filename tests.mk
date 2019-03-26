@@ -6,7 +6,7 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -MMD
 
 LDLIBS = $(addprefix -l, $(ld))
-LSLIBS = $(ls)
+LSLIBS = $(l) $(ls)
 
 INCLUDES = $(addprefix -I, $(i))
 
@@ -20,7 +20,7 @@ build/tests/%.cpp.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Generic runtime builder
-build/tests/%: build/tests/%.cpp.o
+build/tests/%: build/tests/%.cpp.o $(l)
 	$(CXX) $(CXXFLAGS) -rdynamic $< $(LSLIBS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 # Custom builders put here

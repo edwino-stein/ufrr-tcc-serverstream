@@ -53,6 +53,7 @@ DEPS = $(OBJS_FILES:$(OBJ_EXTENSION)=$(DEPENDENCE_EXTENSION))
 
 # Set default static library for unit tests
 l?=$(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a
+a?=""
 
 # *********************************** RULES ************************************
 .PHONY: all clean run test
@@ -77,11 +78,11 @@ run: $(BUILD_DIR)/$(PROJECT_NAME)
 # Unit Tests builder
 test: $(l)
 	@mkdir -p $(UTEST_BUILD_DIR)
-	$(MAKE) -f $(TESTS_MK) $(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) ls="$(l) $(ls)" i="$(INCLUDES) $(i)" ld="$(UTEST_LD) $(ld)"
-	./$(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) --log_level=all
+	$(MAKE) --no-print-directory -f $(TESTS_MK) $(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) l="$(l)" ls="$(ls)" i="$(INCLUDES) $(i)" ld="$(UTEST_LD) $(ld)"
+	./$(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) --log_level=all -- $(a)
 
 $(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a: $(OBJS_UTEST_FILES)
-	@$(ARRVS) $@ $(OBJS_UTEST_FILES)
+	@$(ARRVS) $@ $?
 
 # Include all .d files
 -include $(DEPS)
