@@ -15,11 +15,3 @@ FormatInput::FormatInput() : Format(), format(_format){
 }
 
 FormatInput::~FormatInput(){}
-
-void FormatInput::read(AVPacket *packet) const {
-
-    int r = av_read_frame(this->formatCtx, packet);
-
-    if(r < 0)
-        throw AvErrorException(r, ReturnValueException("av_read_frame", r));
-}

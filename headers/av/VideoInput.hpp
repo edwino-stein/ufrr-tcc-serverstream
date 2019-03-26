@@ -26,6 +26,8 @@
 
                 virtual void rescaleTs(AVPacket *packet) const override;
                 virtual void decode(AVPacket *packet, DecodeListener *listener) const;
+                virtual bool push(AVPacket *packet) const;
+                virtual bool read(AVPacket *packet, const bool rescaleTs, const bool push) const;
         };
     }
 

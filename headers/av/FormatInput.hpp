@@ -16,8 +16,6 @@
 
                 FormatInput();
                 virtual ~FormatInput();
-
-                virtual void read(AVPacket *packet) const;
         };
     }
 

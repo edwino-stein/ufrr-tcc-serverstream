@@ -22,6 +22,51 @@ void VideoInput::rescaleTs(AVPacket *packet) const {
     );
 }
 
+bool VideoInput::push(AVPacket *packet) const {
+    int r;
+
+    r = avcodec_send_packet(this->codecCtx, packet);
+
+    if(r < 0){
+        if(r == AVERROR(EAGAIN)) return false;
+        throw AvErrorException(r, ReturnValueException("avcodec_send_packet", r));
+    }
+
+    return true;
+}
+
+bool VideoInput::read(AVPacket *packet, const bool rescaleTs, const bool push) const {
+
+    int r;
+
+    r = av_read_frame(this->formatCtx, packet);
+
+    if(r < 0){
+        if(r == AVERROR(EAGAIN)) return false;
+        throw AvErrorException(r, ReturnValueException("av_read_frame", r));
+    }
+
+    if(packet->stream_index != this->videoStreamIdx) return true;
+
+    if(rescaleTs){
+        av_packet_rescale_ts(
+            packet,
+            this->videoStream->time_base,
+            this->codecCtx->time_base
+        );
+    }
+
+    if(push){
+        r = avcodec_send_packet(this->codecCtx, packet);
+        if(r < 0){
+            if(r == AVERROR(EAGAIN)) return false;
+            throw AvErrorException(r, ReturnValueException("avcodec_send_packet", r));
+        }
+    }
+
+    return true;
+}
+
 void VideoInput::decode(AVPacket *packet, DecodeListener *listener) const {
 
     if(packet->stream_index != this->videoStreamIdx) return;
