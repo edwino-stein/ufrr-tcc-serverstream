@@ -1,5 +1,4 @@
 #include "av/VideoOutput.hpp"
-#include "av/EncodeListener.hpp"
 
 #include <cstring>
 
