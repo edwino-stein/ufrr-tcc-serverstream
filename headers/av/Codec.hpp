@@ -31,6 +31,7 @@
                 static enum AVCodecID getCodecIdByName(String codecName);
                 static bool supportsPixFmt(String codecName, enum AVPixelFormat pixFmt);
                 static enum AVPixelFormat getPixFmtByName(String pixFmtName);
+                static String getPixFmtName(enum AVPixelFormat pixFmt);
         };
     }
 

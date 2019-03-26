@@ -20,6 +20,11 @@ enum AVPixelFormat Codec::getPixFmtByName(String pixFmtName){
     return av_get_pix_fmt(pixFmtName.c_str());
 }
 
+String Codec::getPixFmtName(enum AVPixelFormat pixFmt){
+    const char *name = av_get_pix_fmt_name(pixFmt);
+    return String(name != NULL ? name : "none");  
+}
+
 bool Codec::supportsPixFmt(String codecName, enum AVPixelFormat pixFmt){
 
     if(pixFmt == AV_PIX_FMT_NONE) return false;
