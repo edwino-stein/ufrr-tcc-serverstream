@@ -15,12 +15,3 @@ FormatOutput::FormatOutput() : Format(), format(_format){
 }
 
 FormatOutput::~FormatOutput(){}
-
-void FormatOutput::write(AVPacket *packet) const {
-
-    int r = av_interleaved_write_frame(this->formatCtx, packet);
-
-    if(r < 0)
-        if (r < 0)
-        throw AvErrorException(r, ReturnValueException("av_interleaved_write_frame", r));
-}

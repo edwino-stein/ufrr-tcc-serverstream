@@ -16,8 +16,6 @@
 
                 FormatOutput();
                 virtual ~FormatOutput();
-
-                virtual void write(AVPacket *packet) const;
         };
     }
 
