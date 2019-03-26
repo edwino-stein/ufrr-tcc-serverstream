@@ -67,23 +67,27 @@ bool VideoInput::read(AVPacket *packet, const bool rescaleTs, const bool push) c
     return true;
 }
 
-void VideoInput::decode(AVPacket *packet, DecodeListener *listener) const {
-
-    if(packet->stream_index != this->videoStreamIdx) return;
+bool VideoInput::decode(DecodeListener *const listener) const {
 
     int r;
-
-    r = avcodec_send_packet(this->codecCtx, packet);
-    if(r < 0) return;
-
     AVFrame *frame = av_frame_alloc();
 
-    while(!r){
+    while(true){
+
         r = avcodec_receive_frame(this->codecCtx, frame);
-        if(!r) listener->onDecoded(frame);
+
+        if(r == 0){
+            listener->onDecoded(frame);
+            continue;
+        }
+
+        av_frame_free(&frame);
+
+        if(r == AVERROR(EAGAIN) || r == AVERROR_EOF) break;
+        throw AvErrorException(r, ReturnValueException("avcodec_receive_frame", r));
     }
 
-    av_frame_free(&frame);
+    return true;
 }
 
 void VideoInput::openFile(String &filename, AVDictionary **options){
