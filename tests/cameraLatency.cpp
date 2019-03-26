@@ -49,10 +49,8 @@ BOOST_AUTO_TEST_CASE(v4l2_camera_latency_test){
     BOOST_TEST_MESSAGE(" * Reading " << maxPackets << " packets from \"" << device << "\"...");
     for(unsigned i = 0; i < maxPackets; ++i){
 
-        AVPacket *packet = av_packet_alloc();
-
         latency = micros();
-        camera.read(packet, false, false);
+        camera.read(false);
         latency = micros() - latency;
 
         average = average + (latency - average)/(++readed);
@@ -62,8 +60,6 @@ BOOST_AUTO_TEST_CASE(v4l2_camera_latency_test){
 
         if(latency > max) max = latency;
         if(latency < min) min = latency;
-
-        av_packet_free(&packet);
     }
 
     camera.close();

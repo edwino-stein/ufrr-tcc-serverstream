@@ -27,13 +27,21 @@ bool VideoInput::push(AVPacket *packet) const {
     return true;
 }
 
-bool VideoInput::read(AVPacket *packet, const bool rescaleTs, const bool push) const {
+bool VideoInput::read(const bool rescaleTs, AVPacket *packet) const {
 
     int r;
+    bool internalPacket = false;
+
+    if(packet == NULL){
+        packet = av_packet_alloc();
+        internalPacket = true;
+    }
 
     r = av_read_frame(this->formatCtx, packet);
 
     if(r < 0){
+        if(internalPacket) av_packet_free(&packet);
+        if(r == AVERROR_EOF) return false;
         if(r == AVERROR(EAGAIN)) return false;
         throw AvErrorException(r, ReturnValueException("av_read_frame", r));
     }
@@ -48,14 +56,16 @@ bool VideoInput::read(AVPacket *packet, const bool rescaleTs, const bool push) c
         );
     }
 
-    if(push){
+    if(internalPacket){
         r = avcodec_send_packet(this->codecCtx, packet);
         if(r < 0){
+            av_packet_free(&packet);
             if(r == AVERROR(EAGAIN)) return false;
             throw AvErrorException(r, ReturnValueException("avcodec_send_packet", r));
         }
     }
 
+    if(internalPacket) av_packet_free(&packet);
     return true;
 }
 

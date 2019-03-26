@@ -25,7 +25,7 @@
                 virtual ~VideoInput();
 
                 virtual bool push(AVPacket *packet) const;
-                virtual bool read(AVPacket *packet, const bool rescaleTs, const bool push) const;
+                virtual bool read(const bool rescaleTs, AVPacket *packet = NULL) const;
                 virtual bool decode(DecodeListener *const listener) const;
         };
     }
