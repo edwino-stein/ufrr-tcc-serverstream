@@ -6,8 +6,6 @@ using namespace av;
 using exceptions::Exception;
 using exceptions::InvalidJsonConfigException;
 
-#include<iostream>
-
 V4L2DeviceInput::V4L2DeviceInput(String device) : VideoInput(){
     this->device = device;
 }
