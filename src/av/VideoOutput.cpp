@@ -24,21 +24,47 @@ void VideoOutput::rescaleTs(AVPacket *packet) const {
     );
 }
 
-void VideoOutput::encode(AVFrame *frame, EncodeListener *listener) const {
+bool VideoOutput::encode(AVFrame *const frame, const bool rescaleTs) const {
 
     int r;
 
     r = avcodec_send_frame(this->codecCtx, frame);
-    if(r < 0) return;
+    if(r < 0){
+        if(r == AVERROR(EAGAIN)) return false;
+        throw AvErrorException(r, ReturnValueException("avcodec_send_frame", r)); 
+    }
 
     AVPacket *packet = av_packet_alloc();
 
-    while(!r){
+    while(true){
+
         r = avcodec_receive_packet(this->codecCtx, packet);
-        if(!r) listener->onEncoded(packet);
+        if(r == AVERROR_EOF) break;
+
+        if(r < 0){
+            av_packet_free(&packet);
+            if(r == AVERROR(EAGAIN)) return false;
+            throw AvErrorException(r, ReturnValueException("avcodec_receive_packet", r));
+        }
+
+        if(rescaleTs){
+            av_packet_rescale_ts(
+                packet,
+                this->codecCtx->time_base,
+                this->videoStream->time_base
+            );
+        }
+
+        r = av_interleaved_write_frame(this->formatCtx, packet);
+        if(r < 0){
+            av_packet_free(&packet);
+            if(r == AVERROR(EAGAIN)) return false;
+            throw AvErrorException(r, ReturnValueException("av_interleaved_write_frame", r));
+        }
     }
 
     av_packet_free(&packet);
+    return true;
 }
 
 void VideoOutput::openFile(String &fileName, AVDictionary **options){

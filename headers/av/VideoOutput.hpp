@@ -25,7 +25,7 @@
                 virtual ~VideoOutput();
 
                 virtual void rescaleTs(AVPacket *packet) const override;
-                virtual void encode(AVFrame *frame, EncodeListener *listener) const;
+                virtual bool encode(AVFrame *const frame, const bool rescaleTs = true) const;
 
         };
     }
