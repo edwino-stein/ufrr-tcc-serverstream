@@ -27,7 +27,6 @@
                 virtual void init()=0;
                 virtual void init(json::JsonObject cfg)=0;
                 virtual void close()=0;
-                virtual void rescaleTs(AVPacket *packet) const =0;
 
                 static enum AVCodecID getCodecIdByName(String codecName);
                 static bool supportsPixFmt(String codecName, enum AVPixelFormat pixFmt);

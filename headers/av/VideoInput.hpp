@@ -24,7 +24,6 @@
                 VideoInput();
                 virtual ~VideoInput();
 
-                virtual void rescaleTs(AVPacket *packet) const override;
                 virtual bool push(AVPacket *packet) const;
                 virtual bool read(AVPacket *packet, const bool rescaleTs, const bool push) const;
                 virtual bool decode(DecodeListener *const listener) const;

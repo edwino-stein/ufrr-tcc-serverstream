@@ -15,14 +15,6 @@ using exceptions::ReturnValueException;
 VideoOutput::VideoOutput() : CodecVideo(), FormatOutput(){}
 VideoOutput::~VideoOutput(){}
 
-void VideoOutput::rescaleTs(AVPacket *packet) const {
-    av_packet_rescale_ts(
-        packet,
-        this->codecCtx->time_base,
-        this->videoStream->time_base
-    );
-}
-
 bool VideoOutput::encode(AVFrame *const frame, const bool rescaleTs) const {
 
     int r;

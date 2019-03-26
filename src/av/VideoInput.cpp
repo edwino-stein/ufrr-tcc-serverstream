@@ -14,14 +14,6 @@ using exceptions::ReturnValueException;
 VideoInput::VideoInput() : CodecVideo(), FormatInput(){}
 VideoInput::~VideoInput(){}
 
-void VideoInput::rescaleTs(AVPacket *packet) const {
-    av_packet_rescale_ts(
-        packet,
-        this->videoStream->time_base,
-        this->codecCtx->time_base
-    );
-}
-
 bool VideoInput::push(AVPacket *packet) const {
     int r;
 
