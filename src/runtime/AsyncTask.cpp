@@ -7,7 +7,7 @@ AsyncTask::AsyncTask(const runtime::TaskHandle task) : Task(task), pThread(std::
 
 
 AsyncTask::~AsyncTask(){
-    if(this->isJoinable()) this->join();
+    this->join();
 }
 
 
@@ -16,7 +16,7 @@ void AsyncTask::run(){
 }
 
 void AsyncTask::join(){
-    this->pThread.join();
+    if(this->isJoinable()) this->pThread.join();
 }
 
 bool AsyncTask::isJoinable() const{

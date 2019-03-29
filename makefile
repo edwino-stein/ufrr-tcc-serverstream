@@ -53,7 +53,7 @@ DEPS = $(OBJS_FILES:$(OBJ_EXTENSION)=$(DEPENDENCE_EXTENSION))
 
 # Set default static library for unit tests
 l?=$(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a
-a?=""
+a?=
 
 # *********************************** RULES ************************************
 .PHONY: all clean run test

@@ -5,6 +5,8 @@
 
 #include "runtime/Task.hpp"
 #include "runtime/AsyncTask.hpp"
+#include "runtime/LoopTask.hpp"
+
 using namespace runtime;
 
 class TaskClass : public TaskContext {
@@ -82,3 +84,20 @@ BOOST_AUTO_TEST_CASE(async_task_count_test){
     BOOST_REQUIRE(count >= 10);
 }
 
+BOOST_AUTO_TEST_CASE(loop_task_count_test){
+
+    int count = 0;
+
+    LoopTask t([&count](TaskContext * const ctx){
+        count++;
+        std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    });
+
+    t.run();
+
+    BOOST_TEST_MESSAGE("waiting for loop task...");
+    while(count < 10);
+
+    t.stop(true);
+    BOOST_REQUIRE(count >= 10);
+}
