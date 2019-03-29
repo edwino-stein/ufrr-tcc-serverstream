@@ -11,7 +11,7 @@ INCLUDES = $(HEADER_DIR) includes
 MACROS =
 STATIC_LIBRARIES =
 DLIBRARIES_PATH =
-DYNAMIC_LIBRARIES = boost_system dl avcodec avdevice avfilter avformat avutil
+DYNAMIC_LIBRARIES = boost_system dl avcodec avdevice avfilter avformat avutil pthread
 
 # Unit tests settings
 EXCLUDE_FILES = main.cpp

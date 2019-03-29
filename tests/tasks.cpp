@@ -4,6 +4,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "runtime/Task.hpp"
+#include "runtime/AsyncTask.hpp"
 using namespace runtime;
 
 class TaskClass : public TaskContext {
@@ -43,5 +44,41 @@ BOOST_AUTO_TEST_CASE(task_test_with_context){
     t.run();
 
     BOOST_REQUIRE(tc.done);
+}
+
+BOOST_AUTO_TEST_CASE(async_task_test){
+
+    bool runnedby = false;
+
+    AsyncTask t([&runnedby](TaskContext * const ctx){
+        runnedby = true;
+    });
+
+    BOOST_REQUIRE(!runnedby);
+
+    t.run();
+    t.join();
+
+    BOOST_REQUIRE(runnedby);
+}
+
+BOOST_AUTO_TEST_CASE(async_task_count_test){
+
+    int count = 0;
+
+    AsyncTask t([&count](TaskContext * const ctx){
+        while(count < 10){
+            count++;
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        }
+    });
+
+    t.run();
+
+    BOOST_TEST_MESSAGE("waiting for async task...");
+    while(count < 10);
+
+    t.join();
+    BOOST_REQUIRE(count >= 10);
 }
 
