@@ -24,3 +24,9 @@ build/tests/%: build/tests/%.cpp.o $(l)
 	$(CXX) $(CXXFLAGS) -rdynamic $< $(LSLIBS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 # Custom builders put here
+
+build/tests/fileToScreen.cpp.o: tests/fileToScreen.cpp
+	$(CXX) $(CXXFLAGS) -Wno-deprecated -Wno-deprecated-declarations $(INCLUDES) -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -c $< -o $@
+
+build/tests/fileToScreen: build/tests/fileToScreen.cpp.o $(l)
+	$(CXX) $(CXXFLAGS) -rdynamic $< $(LSLIBS) -o $@ $(LDFLAGS) -L/usr/lib/x86_64-linux-gnu  $(LDLIBS) -lSDL -lswscale
