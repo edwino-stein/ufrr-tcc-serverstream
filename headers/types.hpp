@@ -5,7 +5,9 @@
     #include <vector>
     #include <functional>
     #include <mutex>
-    #include "ArduinoJson/ArduinoJson.h"
+
+    //Submodulos
+    #include "ArduinoJson.h"
 
     using String = std::string;
     template <class T> using Vector = std::vector<T>;

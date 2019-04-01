@@ -1,3 +1,6 @@
 [submodule "ArduinoJson"]
 	path = includes/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson.git
+[submodule "includes/boost.beast"]
+	path = includes/boost.beast
+	url = https://github.com/boostorg/beast.git

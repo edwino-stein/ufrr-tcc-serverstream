@@ -7,7 +7,7 @@ OBJ_EXTENSION = .o
 DEPENDENCE_EXTENSION = .d
 
 # Custom includes and libs
-INCLUDES = $(HEADER_DIR) includes
+INCLUDES = $(HEADER_DIR) includes/ArduinoJson includes/boost.beast/include
 MACROS =
 STATIC_LIBRARIES =
 DLIBRARIES_PATH =
