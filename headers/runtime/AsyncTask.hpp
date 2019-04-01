@@ -3,14 +3,11 @@
 
     #include <thread>
     #include "runtime/Task.hpp"
+    #include "runtime/Thread.hpp"
 
     namespace runtime {
 
-        class AsyncTask : public runtime::Task {
-
-            protected:
-
-                std::thread pThread;
+        class AsyncTask : public runtime::Task, public runtime::Thread {
 
             private:
                 static void entryPoint(AsyncTask * const t);
@@ -22,8 +19,6 @@
                 virtual ~AsyncTask();
 
                 virtual void run() override;
-                virtual void join();
-                virtual bool isJoinable() const;
         };
     }
 

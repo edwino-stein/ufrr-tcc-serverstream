@@ -7,9 +7,6 @@
 
         class LoopTask : public runtime::AsyncTask {
 
-            protected:
-                bool keepLoop;
-
             private:
                 static void entryPoint(LoopTask * const t);
 
@@ -20,7 +17,6 @@
                 virtual ~LoopTask();
 
                 virtual void run() override;
-                virtual void stop(bool join = false);
         };
     }
 

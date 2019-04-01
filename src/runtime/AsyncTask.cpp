@@ -2,25 +2,16 @@
 
 using namespace runtime;
 
-AsyncTask::AsyncTask(TaskContext * const taskCtx, const TaskHandle task) : Task(taskCtx, task), pThread(std::thread()){}
-AsyncTask::AsyncTask(const runtime::TaskHandle task) : Task(task), pThread(std::thread()){}
-
+AsyncTask::AsyncTask(TaskContext * const taskCtx, const TaskHandle task) : Task(taskCtx, task), Thread(){}
+AsyncTask::AsyncTask(const runtime::TaskHandle task) : Task(task), Thread(){}
 
 AsyncTask::~AsyncTask(){
-    this->join();
+    this->stop(true);
 }
-
 
 void AsyncTask::run(){
+    this->running = true;
     this->pThread = std::thread(AsyncTask::entryPoint, this);
-}
-
-void AsyncTask::join(){
-    if(this->isJoinable()) this->pThread.join();
-}
-
-bool AsyncTask::isJoinable() const{
-    return this->pThread.joinable();
 }
 
 void AsyncTask::entryPoint(AsyncTask * const t){

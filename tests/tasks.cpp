@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(async_task_test){
     BOOST_REQUIRE(!runnedby);
 
     t.run();
-    t.join();
+    t.stop();
 
     BOOST_REQUIRE(runnedby);
 }
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(async_task_count_test){
     BOOST_TEST_MESSAGE("waiting for async task...");
     while(count < 10);
 
-    t.join();
+    t.stop();
     BOOST_REQUIRE(count >= 10);
 }
 
@@ -98,6 +98,6 @@ BOOST_AUTO_TEST_CASE(loop_task_count_test){
     BOOST_TEST_MESSAGE("waiting for loop task...");
     while(count < 10);
 
-    t.stop(true);
+    t.stop();
     BOOST_REQUIRE(count >= 10);
 }
