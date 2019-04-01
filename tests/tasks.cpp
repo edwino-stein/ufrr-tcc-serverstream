@@ -6,6 +6,7 @@
 #include "runtime/Task.hpp"
 #include "runtime/AsyncTask.hpp"
 #include "runtime/LoopTask.hpp"
+#include "runtime/LoopInside.hpp"
 
 using namespace runtime;
 
@@ -15,6 +16,22 @@ class TaskClass : public TaskContext {
         void doTask(){
             BOOST_TEST_MESSAGE("TaskClass::doTask");
             this->done = true;
+        }
+};
+
+class LoopInsideTask : public LoopInside {
+    protected:
+        void loop() override {
+            this->count++;
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        }
+
+    public:
+
+        int count;
+
+        LoopInsideTask(){
+            this->count = 0;
         }
 };
 
@@ -100,4 +117,16 @@ BOOST_AUTO_TEST_CASE(loop_task_count_test){
 
     t.stop();
     BOOST_REQUIRE(count >= 10);
+}
+
+BOOST_AUTO_TEST_CASE(inside_loop_task_count_test){
+
+    LoopInsideTask t;
+    t.run();
+
+    BOOST_TEST_MESSAGE("waiting for inside loop task...");
+    while(t.count < 10);
+
+    t.stop();
+    BOOST_REQUIRE(t.count >= 10);
 }
