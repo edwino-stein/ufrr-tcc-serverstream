@@ -1,6 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-#define BOOST_TEST_MODULE test suite fileInput
+#define BOOST_TEST_MODULE test suite fileOutput
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
@@ -18,13 +18,6 @@ using namespace exceptions;
                         json::JsonObject o = d.as<json::JsonObject>()
 
 #define EXAMPLE_FILE_MP4 "output.mp4"
-
-bool checkExceptionOutput(const Exception &e){
-    BOOST_TEST_MESSAGE("*********************** OUTPUT e.what() ***********************");
-    BOOST_TEST_MESSAGE(e.what());
-    BOOST_TEST_MESSAGE("***************************************************************");
-    return true;
-}
 
 BOOST_AUTO_TEST_CASE(init_object_av_not_initted_error){
 

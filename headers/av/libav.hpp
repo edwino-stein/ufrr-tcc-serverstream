@@ -30,7 +30,9 @@
         class VideoOutput;
         class VideoFileInput;
         class VideoFileOutput;
+        class VideoMemoryOutput;
         class FilterGraph;
+        class Transcoder;
 
         //Interfaces
         class DecodeListener;
