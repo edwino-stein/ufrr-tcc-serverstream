@@ -37,6 +37,8 @@
         using SessionCloseCode  = boost::beast::websocket::close_code;
 
         //Functions
+        IOBuffer stringToIOBuffer(String str);
+        String ioBufferToString(IOBuffer &buffer);
 
         //Classes
         class Session;
