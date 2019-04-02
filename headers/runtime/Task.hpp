@@ -12,13 +12,17 @@
 
             protected:
 
-                runtime::TaskContext * const taskCtx;
-                const runtime::TaskHandle task;
+                runtime::TaskContext * taskCtx;
+                runtime::TaskHandle task;
 
             public:
 
+                Task();
                 Task(runtime::TaskContext * const taskCtx, const runtime::TaskHandle task);
                 Task(const runtime::TaskHandle task);
+
+                Task &operator=(const Task& other);
+
                 virtual ~Task();
                 virtual void run();
         };
