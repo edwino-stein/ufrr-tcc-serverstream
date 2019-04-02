@@ -40,6 +40,7 @@
 
         //Classes
         class Session;
+        class ServerCallback;
 
         //Interfaces
         class SessionListener;
