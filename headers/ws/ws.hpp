@@ -43,6 +43,7 @@
 
         //Interfaces
         class SessionListener;
+        class ServerListener;
 
     }
 
