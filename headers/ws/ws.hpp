@@ -42,6 +42,7 @@
         class Session;
         class ServerCallback;
         class ServerRequestAcceptor;
+        class Server;
 
         //Interfaces
         class SessionListener;
