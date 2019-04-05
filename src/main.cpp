@@ -1,6 +1,5 @@
-#include <iostream>
+#include "Application.hpp"
 
 int main(int argc, char const *argv[]){
-    std::cout << "Ola mundo" << std::endl;
-    return 0;
+    return Application::app().main(argc, argv);
 }
