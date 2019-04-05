@@ -63,8 +63,12 @@ clean:
 
 #Runtime builder
 $(PROJECT_NAME): $(BUILD_DIR)/$(PROJECT_NAME)
-$(BUILD_DIR)/$(PROJECT_NAME): $(OBJS_FILES)
-	$(CXX) $(CXXFLAGS) -rdynamic $(OBJS_FILES) $(STATIC_LIBRARIES) -o $@ $(LDFLAGS) $(LDLIBS)
+$(BUILD_DIR)/$(PROJECT_NAME): $(BUILD_DIR)/$(PROJECT_NAME)-all.a
+	$(CXX) $(CXXFLAGS) -rdynamic $? $(STATIC_LIBRARIES) -o $@ $(LDFLAGS) $(LDLIBS)
+
+#Static library builder
+$(BUILD_DIR)/$(PROJECT_NAME)-all.a: $(OBJS_FILES)
+	@$(ARRVS) $@ $?
 
 # Objects builder
 $(BUILD_DIR)/%$(OBJ_EXTENSION): $(SRC_DIR)/%
@@ -81,6 +85,7 @@ test: $(l)
 	$(MAKE) --no-print-directory -f $(TESTS_MK) $(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) l="$(l)" ls="$(ls)" i="$(INCLUDES) $(i)" ld="$(UTEST_LD) $(ld)"
 	./$(UTEST_BUILD_DIR)/$(notdir $(basename $(t))) --log_level=all -- $(a)
 
+#Static utest library builder
 $(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a: $(OBJS_UTEST_FILES)
 	@$(ARRVS) $@ $?
 
