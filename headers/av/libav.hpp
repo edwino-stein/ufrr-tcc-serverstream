@@ -29,6 +29,7 @@
         class VideoInput;
         class VideoOutput;
         class VideoFileInput;
+        class V4L2DeviceInput;
         class VideoFileOutput;
         class VideoMemoryOutput;
         class FilterGraph;
