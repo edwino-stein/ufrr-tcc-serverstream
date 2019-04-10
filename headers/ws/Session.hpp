@@ -28,12 +28,12 @@
                 Session(ws::WSocket * const socket, ws::SessionListener * const listener);
                 virtual ~Session();
 
-                virtual void send(IOBuffer &data) const;
+                virtual void send(IOBuffer &data);
                 virtual void setType(ws::SessionMessageType type);
 
                 virtual void run() override;
-                virtual void close(ws::SessionCloseCode code);
                 virtual void stop(const bool join) override;
+                virtual void close();
         };
     }
 

@@ -16,9 +16,7 @@ LoopInside(), listener(listener), socket(socket), readyState(_readyState), type(
 }
 
 Session::~Session(){
-    this->close(SessionCloseCode::normal);
-    this->stop(true);
-    delete this->socket;
+    if(this->socket != NULL) this->close();
 }
 
 void Session::loop(){
@@ -63,17 +61,17 @@ void Session::stop(const bool join){
 
 void Session::close(SessionCloseCode code){
 
-    if(!(this->readyState == SessionLifeCycle::OPEN || this->readyState == SessionLifeCycle::CONNECTING)) return;
+    if(this->readyState == SessionLifeCycle::CLOSED) return;
 
     this->_readyState = SessionLifeCycle::CLOSING;
 
-    try{
-        CloseReason c(code);
-        this->socket->close(c);
+    if(this->socket != NULL){
+        delete this->socket;
+        this->socket = NULL;
     }
-    catch(boost::system::system_error const& e){}
 
     this->_readyState = SessionLifeCycle::CLOSED;
+    this->stop(false);
 }
 
 void Session::send(IOBuffer &data){

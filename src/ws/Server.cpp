@@ -15,15 +15,18 @@ Server::~Server(){
 
 void Server::stop(){
 
+    if(!this->running) return;
+
     ServerRequestAcceptor::close();
     LoopInside::stop(true);
 
+
     this->sessionsMtx.lock();
+
     for(Vector<Session *>::iterator it = this->sessions.begin(); it != this->sessions.end(); ++it){
-        Session *s = *it;
-        s->close(SessionCloseCode::going_away);
-        delete s;
+        delete (*it);
     }
+
     this->sessions.clear();
     this->sessionsMtx.unlock();
 }
@@ -31,16 +34,17 @@ void Server::stop(){
 void Server::loop(){
 
     Session *session = this->accept();
-    if(session == NULL) return;
 
-    this->sessionsMtx.lock();
-    this->sessions.push_back(session);
-    this->sessionsMtx.unlock();
+    if(session != NULL){
+        this->sessionsMtx.lock();
+        this->sessions.push_back(session);
+        this->sessionsMtx.unlock();
 
-    session->run();
-    this->listener->onConnection(session);
+        session->run();
+        this->listener->onConnection(session);
+    }
 
-    if(this->autoClearup) this->clearup();
+    this->clearup();
 }
 
 void Server::broadcast(IOBuffer &data){

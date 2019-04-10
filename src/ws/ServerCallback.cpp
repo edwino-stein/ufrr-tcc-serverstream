@@ -18,7 +18,6 @@ void ServerCallback::onMessage(Session * const session, IOBuffer &data){
 
 void ServerCallback::onClose(Session * const session, const int code){
     if(this->listener != NULL) this->listener->onClose(session, code);
-    session->close(SessionCloseCode::normal);
 }
 
 void ServerCallback::onError(Session * const session, WsErrorException e){
