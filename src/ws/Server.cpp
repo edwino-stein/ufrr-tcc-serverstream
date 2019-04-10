@@ -2,12 +2,14 @@
 #include "ws/Session.hpp"
 #include "ws/ServerListener.hpp"
 
+#include <algorithm>
+
 using namespace ws;
 using runtime::LoopInside;
 using exceptions::Exception;
 
-Server::Server(const int port, ws::ServerListener * const listener, const bool autoClearup):
-LoopInside(), ServerRequestAcceptor(port, listener), autoClearup(autoClearup){}
+Server::Server(const int port, ws::ServerListener * const listener):
+LoopInside(), ServerRequestAcceptor(port, listener){}
 
 Server::~Server(){
     this->stop();
@@ -57,19 +59,28 @@ void Server::broadcast(IOBuffer &data){
 
 void Server::clearup(){
 
+    if(!this->running) return;
+    Vector<Session *> toFree;
+
     this->sessionsMtx.lock();
-
-    Vector<Session *>::iterator it = this->sessions.begin();
-    while(it != this->sessions.end()){
-        Session *s = *it;
-
-        if(s->readyState == SessionLifeCycle::CLOSED){
-            this->sessions.erase(it);
-            delete s;
-        }
-
-        it++;
-    }
+    this->sessions.erase(
+        std::remove_if(
+            this->sessions.begin(),
+            this->sessions.end(),
+            [&toFree](Session * s){
+                if(s->readyState != SessionLifeCycle::CLOSED) return false;
+                toFree.push_back(s);
+                return true;
+            }
+        ),
+        this->sessions.end()
+    );
 
     this->sessionsMtx.unlock();
+
+    for(Vector<Session *>::iterator it = toFree.begin(); it != toFree.end(); ++it){
+        delete (*it);
+    }
+
+    toFree.clear();
 }

@@ -12,14 +12,13 @@
 
                 Mutex sessionsMtx;
                 Vector<Session *> sessions;
-                const bool autoClearup;
 
                 virtual void loop() override;
                 virtual void clearup();
 
             public:
 
-                Server(const int port, ws::ServerListener * const listener, const bool autoClearup = false);
+                Server(const int port, ws::ServerListener * const listener);
                 virtual ~Server();
 
                 virtual void broadcast(IOBuffer &data);
