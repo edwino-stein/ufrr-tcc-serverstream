@@ -141,7 +141,9 @@ void Application::initVideo(JsonObject cfg){
         size_t n = boost::asio::buffer_copy(buffer.prepare(size), cbf);
         buffer.commit(n);
 
-        Application::app().server->broadcast(buffer);
+        //TODO: Será adicionada numa fila e enviado por outra thread
+        if(Application::app().server != NULL)
+            Application::app().server->broadcast(buffer);
 
         return 0;
     });
