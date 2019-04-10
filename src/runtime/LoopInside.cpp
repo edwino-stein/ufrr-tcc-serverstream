@@ -15,5 +15,4 @@ void LoopInside::run(){
 
 void LoopInside::entryPoint(LoopInside * const t){
     while(t->running) t->loop();
-    std::this_thread::yield();
 }

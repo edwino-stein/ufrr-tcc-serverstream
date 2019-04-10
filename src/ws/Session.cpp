@@ -10,8 +10,9 @@ using boost::system::error_code;
 
 Session::Session(WSocket * const socket, SessionListener * const listener) :
 LoopInside(), listener(listener), socket(socket), readyState(_readyState), type(_type) {
-    this->setType(SessionMessageType::TEXT);
     this->_readyState = SessionLifeCycle::CONNECTING;
+    this->setType(SessionMessageType::TEXT);
+    this->isDetach = false;
 }
 
 Session::~Session(){
@@ -50,6 +51,14 @@ void Session::loop(){
 void Session::run(){
     this->_readyState = SessionLifeCycle::OPEN;
     LoopInside::run();
+}
+
+void Session::stop(const bool join){
+    if(!this->isDetach){
+        this->isDetach = true;
+        this->pThread.detach();
+        LoopInside::stop(join);
+    }
 }
 
 void Session::close(SessionCloseCode code){

@@ -7,11 +7,13 @@
     namespace ws {
 
         class Session : public runtime::LoopInside {
+            private:
+                bool isDetach;
 
             protected:
 
                 ws::SessionListener * const listener;
-                ws::WSocket * const socket;
+                ws::WSocket * socket;
 
                 ws::SessionLifeCycle _readyState;
                 ws::SessionMessageType _type;
@@ -31,6 +33,7 @@
 
                 virtual void run() override;
                 virtual void close(ws::SessionCloseCode code);
+                virtual void stop(const bool join) override;
         };
     }
 
