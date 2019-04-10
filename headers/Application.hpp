@@ -35,7 +35,7 @@
             //Websocket callback
             void onMessage(ws::Session * const session, ws::IOBuffer &data) override;
             void onClose(ws::Session * const session, const int code) override;
-            void onError(ws::Session * const session, exceptions::Exception e) override;
+            void onError(ws::Session * const session, exceptions::WsErrorException e) override;
             void onConnection(ws::Session * const session) override;
             bool onIsAcceptable(ws::HTTPRequest &request) override;
             void onAccept(ws::HTTPWSResponse &response) override;

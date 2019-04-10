@@ -27,6 +27,7 @@ using runtime::Signal;
 using runtime::Task;
 using json::JsonObject;
 using exceptions::Exception;
+using exceptions::WsErrorException;
 
 Application* Application::instance = NULL;
 Application::Application(Application const&){}
@@ -155,7 +156,7 @@ void Application::onClose(Session * const session, const int code){
     std::cout << "Connection closed" << '\n';
 }
 
-void Application::onError(Session * const session, Exception e){}
+void Application::onError(Session * const session, WsErrorException e){}
 
 void Application::onConnection(Session * const session){
     session->setType(ws::SessionMessageType::BINARY);
