@@ -5,6 +5,9 @@
     #include "av/libav.hpp"
     #include "ws/ws.hpp"
     #include "ws/ServerListener.hpp"
+    #include "runtime/UnixMessageQueueListener.hpp"
+
+    #define QUEUE_MSG_BS 512
 
     class Application : public ws::ServerListener {
 
@@ -21,7 +24,10 @@
             av::VideoMemoryOutput *videoOut;
             av::Transcoder *transcoder;
 
+            runtime::UnixMessageQueueListener<QUEUE_MSG_BS> *mql;
+
             void initVideo(json::JsonObject cfg);
+            void onQueueMessage(String &msg);
 
         public:
             virtual ~Application();

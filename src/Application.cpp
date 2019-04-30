@@ -25,6 +25,7 @@ using ws::HTTPWSResponse;
 
 using runtime::Signal;
 using runtime::Task;
+using runtime::UnixMessageQueueListener;
 using json::JsonObject;
 using exceptions::Exception;
 using exceptions::WsErrorException;
@@ -38,6 +39,7 @@ Application::Application(){
     this->videoIn = NULL;
     this->videoOut = NULL;
     this->transcoder = NULL;
+    this->mql = NULL;
 }
 
 Application::~Application(){
@@ -57,10 +59,13 @@ int Application::main(int argc, char const *argv[]){
         std::exit(0);
     }));
 
+    //TODO: O arquivo para a chave da QML deve ser fornecida palo argv
+    this->mql = new UnixMessageQueueListener<QUEUE_MSG_BS>("README.md", [](String &msg){
+        Application::app().onQueueMessage(msg);
+    }, true);
+
     av::initAll();
 
-    //TODO: This string comes from other place
-    String strJson = "{\
         'decoder':{\
             'device':'/dev/video0',\
             'width':640,\
@@ -95,9 +100,17 @@ int Application::main(int argc, char const *argv[]){
 
     this->start();
 
+    std::cout << "Waiting for command..." << '\n';
+    this->mql->run();
     while(true);
     return 0;
 }
+
+void Application::onQueueMessage(String &msg){
+
+    std::cout << msg << '\n';
+}
+
 
 void Application::start(){
     if(this->server != NULL) this->server->run();
@@ -111,6 +124,9 @@ void Application::stop(){
         delete this->server;
         this->server = NULL;
     }
+    this->mql->destroyQueue();
+    this->mql->stop(true);
+    delete this->mql;
 
     if(this->transcoder != NULL){
         this->transcoder->stop();
