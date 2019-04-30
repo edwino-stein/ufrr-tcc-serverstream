@@ -12,6 +12,7 @@
 #include "runtime/Signal.hpp"
 #include "runtime/Task.hpp"
 #include "exceptions/Exception.hpp"
+#include "exceptions/InvalidJsonConfigException.hpp"
 
 using av::V4L2DeviceInput;
 using av::VideoMemoryOutput;
@@ -28,6 +29,7 @@ using runtime::Task;
 using runtime::UnixMessageQueueListener;
 using json::JsonObject;
 using exceptions::Exception;
+using exceptions::InvalidJsonConfigException;
 using exceptions::WsErrorException;
 
 Application* Application::instance = NULL;
@@ -66,40 +68,6 @@ int Application::main(int argc, char const *argv[]){
 
     av::initAll();
 
-        'decoder':{\
-            'device':'/dev/video0',\
-            'width':640,\
-            'height':480,\
-            'framerate':30,\
-            'rescaleTs':false\
-        },\
-        'encoder':{\
-            'demuxer':'mpegts',\
-            'codec':'mpeg1video',\
-            'width':640,\
-            'height':480,\
-            'framerate':30,\
-            'bitrate':1000000,\
-            'bframes':0,\
-            'rescaleTs':true\
-        }\
-    }";
-
-    json::DynamicJsonDocument jsonDoc(1024);
-    json::deserializeJson(jsonDoc, strJson);
-    std::cout << "JSON: " << jsonDoc << '\n';
-
-    try{
-        this->initVideo(jsonDoc.as<JsonObject>());
-        this->server = new Server(8888, this, true);
-    }
-    catch(Exception &e){
-        std::cout << e.what() << '\n';
-        return 1;
-    }
-
-    this->start();
-
     std::cout << "Waiting for command..." << '\n';
     this->mql->run();
     while(true);
@@ -108,9 +76,35 @@ int Application::main(int argc, char const *argv[]){
 
 void Application::onQueueMessage(String &msg){
 
-    std::cout << msg << '\n';
+    json::DynamicJsonDocument jsonMessage(JSON_BS);
+    json::deserializeJson(jsonMessage, msg);
+
+    if(!jsonMessage["cmd"].is<const char *>()) return;
+    String cmd(jsonMessage["cmd"].as<const char *>());
+
+    if(cmd == "start")
+        return this->onStart(jsonMessage["extra"].as<json::JsonObject>());
 }
 
+void Application::onStart(json::JsonObject extra){
+
+    if(extra.isNull()) return;
+
+    std::cout << "Received command start: " << extra << std::endl;
+
+    try{
+        this->initWs(extra);
+        this->initVideo(extra);
+    }
+    catch(Exception &e){
+        this->stopVideo();
+        this->stopWs();
+        std::cout << e.what() << '\n';
+        return;
+    }
+
+    this->start();
+}
 
 void Application::start(){
     if(this->server != NULL) this->server->run();
@@ -119,14 +113,38 @@ void Application::start(){
 
 void Application::stop(){
 
-    if(this->server != NULL){
-        this->server->stop();
-        delete this->server;
-        this->server = NULL;
-    }
     this->mql->destroyQueue();
     this->mql->stop(true);
     delete this->mql;
+
+    this->stopVideo();
+    this->stopWs();
+}
+
+void Application::initVideo(JsonObject cfg){
+
+    if(!cfg["inputDevice"].is<const char *>()) throw InvalidJsonConfigException("inputDevice", "Int");
+
+    this->videoIn = new V4L2DeviceInput(cfg["inputDevice"].as<const char *>());
+    this->videoOut = new VideoMemoryOutput([](uint8_t * const data, const int size, VideoMemoryOutput * const vmo){
+
+        IOBuffer buffer;
+        boost::asio::const_buffer cbf = boost::asio::buffer(data, size);
+        size_t n = boost::asio::buffer_copy(buffer.prepare(size), cbf);
+        buffer.commit(n);
+
+        //TODO: Será adicionada numa fila e enviado por outra thread
+        if(Application::app().server != NULL)
+            Application::app().server->broadcast(buffer);
+
+        return 0;
+    });
+
+    this->transcoder = new Transcoder(this->videoIn, this->videoOut);
+    this->transcoder->init(cfg);
+}
+
+void Application::stopVideo(){
 
     if(this->transcoder != NULL){
         this->transcoder->stop();
@@ -147,25 +165,22 @@ void Application::stop(){
     }
 }
 
-void Application::initVideo(JsonObject cfg){
+void Application::stopWs(){
+    if(this->server != NULL){
+        this->server->stop();
+        delete this->server;
+        this->server = NULL;
+    }
+}
 
-    this->videoIn = new V4L2DeviceInput(cfg["decoder"]["device"].as<const char *>());
-    this->videoOut = new VideoMemoryOutput([](uint8_t * const data, const int size, VideoMemoryOutput * const vmo){
+void Application::initWs(json::JsonObject cfg){
 
-        IOBuffer buffer;
-        boost::asio::const_buffer cbf = boost::asio::buffer(data, size);
-        size_t n = boost::asio::buffer_copy(buffer.prepare(size), cbf);
-        buffer.commit(n);
+    if(!cfg["serverPort"].is<int>()) throw InvalidJsonConfigException("serverPort", "Int ([0,65535])");
 
-        //TODO: Será adicionada numa fila e enviado por outra thread
-        if(Application::app().server != NULL)
-            Application::app().server->broadcast(buffer);
+    int port = cfg["serverPort"];
+    if(port < 0 || port > 65535) throw InvalidJsonConfigException("serverPort", "Int ([0,65535])");
 
-        return 0;
-    });
-
-    this->transcoder = new Transcoder(this->videoIn, this->videoOut);
-    this->transcoder->init(cfg);
+    this->server = new Server(port, this);
 }
 
 void Application::onMessage(Session * const session, IOBuffer &data){}

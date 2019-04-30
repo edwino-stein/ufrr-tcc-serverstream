@@ -8,6 +8,7 @@
     #include "runtime/UnixMessageQueueListener.hpp"
 
     #define QUEUE_MSG_BS 512
+    #define JSON_BS 1024
 
     class Application : public ws::ServerListener {
 
@@ -27,7 +28,13 @@
             runtime::UnixMessageQueueListener<QUEUE_MSG_BS> *mql;
 
             void initVideo(json::JsonObject cfg);
+            void initWs(json::JsonObject cfg);
+
+            void stopVideo();
+            void stopWs();
+
             void onQueueMessage(String &msg);
+            void onStart(json::JsonObject extra);
 
         public:
             virtual ~Application();
