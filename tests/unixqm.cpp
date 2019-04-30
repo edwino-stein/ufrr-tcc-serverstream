@@ -10,10 +10,10 @@ using namespace runtime;
 BOOST_AUTO_TEST_CASE(unixqm_test){
 
     bool stop = false;
-    UnixMessageQueueListener umq("README.md", [&stop](String &msg){
+    UnixMessageQueueListener<256> umq("README.md", [&stop](String &msg){
         BOOST_TEST_MESSAGE(" * Message: \"" << msg << "\"");
         stop = true;
-    }, 255, true);
+    }, true);
 
 
     BOOST_TEST_MESSAGE("Waiting for message...");
