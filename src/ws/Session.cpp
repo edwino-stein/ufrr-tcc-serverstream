@@ -59,7 +59,7 @@ void Session::stop(const bool join){
     }
 }
 
-void Session::close(SessionCloseCode code){
+void Session::close(){
 
     if(this->readyState == SessionLifeCycle::CLOSED) return;
 
