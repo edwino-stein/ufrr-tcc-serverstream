@@ -56,7 +56,7 @@ Application& Application::app(){
 int Application::main(int argc, char const *argv[]){
 
     Signal::attach(runtime::SIG::INT, Task([](runtime::TaskContext * const ctx){
-        std::cout << "* Received runtime::SIG::INT" << '\n';
+        std::cout << "* Received SIG::INT" << '\n';
         Application::app().stop();
         std::exit(0);
     }));
@@ -97,10 +97,14 @@ void Application::onQueueMessage(String &msg){
 
     if(cmd == "start")
         return this->onStart(jsonMessage["extra"].as<json::JsonObject>());
+
+    if(cmd == "stop")
+        return this->onStop(jsonMessage["extra"].as<json::JsonObject>());
 }
 
 void Application::onStart(json::JsonObject extra){
 
+    if(this->state == Application::STREAM_STATE::RUNNING) return;
     if(extra.isNull()) return;
 
     std::cout << "Received command start: " << extra << std::endl;
@@ -117,6 +121,17 @@ void Application::onStart(json::JsonObject extra){
     }
 
     this->start();
+    this->state = Application::STREAM_STATE::RUNNING;
+}
+
+void Application::onStop(json::JsonObject extra){
+
+    if(this->state == Application::STREAM_STATE::STOPPED) return;
+    std::cout << "Received command stop: " << extra << std::endl;
+
+    this->stopVideo();
+    this->stopWs();
+    this->state = Application::STREAM_STATE::STOPPED;
 }
 
 void Application::start(){
@@ -132,6 +147,7 @@ void Application::stop(){
 
     this->stopVideo();
     this->stopWs();
+    this->state = Application::STREAM_STATE::STOPPED;
 }
 
 void Application::initVideo(JsonObject cfg){

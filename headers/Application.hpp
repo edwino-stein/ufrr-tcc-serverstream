@@ -42,6 +42,7 @@
 
             void onQueueMessage(String &msg);
             void onStart(json::JsonObject extra);
+            void onStop(json::JsonObject extra);
 
         public:
             virtual ~Application();
