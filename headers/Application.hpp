@@ -13,6 +13,13 @@
     class Application : public ws::ServerListener {
 
         private:
+
+            enum STREAM_STATE {
+                STOPPED,
+                RUNNING,
+                ERROR
+            };
+
             //Singleton setup
             static Application* instance;
             Application();
@@ -20,11 +27,11 @@
             Application& operator=(Application const&);
 
             ws::Server *server;
-
             av::V4L2DeviceInput *videoIn;
             av::VideoMemoryOutput *videoOut;
             av::Transcoder *transcoder;
 
+            enum STREAM_STATE state = STREAM_STATE::STOPPED;
             runtime::UnixMessageQueueListener<QUEUE_MSG_BS> *mql;
 
             void initVideo(json::JsonObject cfg);

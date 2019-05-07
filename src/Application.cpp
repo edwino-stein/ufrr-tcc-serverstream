@@ -70,7 +70,20 @@ int Application::main(int argc, char const *argv[]){
 
     std::cout << "Waiting for command..." << '\n';
     this->mql->run();
-    while(true);
+
+    Application::STREAM_STATE s = this->state;
+    while(true){
+
+        if(s == this->state) continue;
+        s = this->state;
+
+        if(s == Application::STREAM_STATE::STOPPED)
+            std::cout << "STREAM_STATE::STOPPED" << '\n';
+
+        if(s == Application::STREAM_STATE::RUNNING)
+            std::cout << "STREAM_STATE::RUNNING" << '\n';
+    }
+
     return 0;
 }
 
@@ -123,7 +136,7 @@ void Application::stop(){
 
 void Application::initVideo(JsonObject cfg){
 
-    if(!cfg["inputDevice"].is<const char *>()) throw InvalidJsonConfigException("inputDevice", "Int");
+    if(!cfg["inputDevice"].is<const char *>()) throw InvalidJsonConfigException("inputDevice", "String");
 
     this->videoIn = new V4L2DeviceInput(cfg["inputDevice"].as<const char *>());
     this->videoOut = new VideoMemoryOutput([](uint8_t * const data, const int size, VideoMemoryOutput * const vmo){
