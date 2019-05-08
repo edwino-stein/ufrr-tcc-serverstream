@@ -30,40 +30,46 @@ class Listener : public ServerListener{
             BOOST_TEST_MESSAGE(" * Connection closed");
         }
 
-        void onError(ws::Session * const session, exceptions::WsErrorException e){}
+        void onError(ws::Session * const session, exceptions::WsErrorException e){std::cout << "onError" << '\n';}
         bool onIsAcceptable(ws::HTTPRequest &request){ return true; }
         void onAccept(ws::HTTPWSResponse &response){}
 };
-
-BOOST_AUTO_TEST_CASE(init_server){
-
-    Server server(8888, NULL);
-
-    BOOST_TEST_MESSAGE(" * Running server per 2 seconds...");
-    server.run();
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-
-    BOOST_TEST_MESSAGE(" * Stopping server...");
-    server.stop();
-}
 
 BOOST_AUTO_TEST_CASE(echo_server){
 
     bool loop = true;
     runtime::Signal::attach(
-        runtime::SIG::INT,
+        runtime::SIG::ABRT,
         runtime::Task([&loop](runtime::TaskContext * const ctx){
             loop = false;
         })
     );
 
     Listener l;
-    Server server(8888, &l);
+    Server *server = NULL;
 
-    server.run();
-    BOOST_TEST_MESSAGE(" * Waiting connections on \"ws://0.0.0.0:8888/\" (Ctrl+C to stop)...");
+    runtime::Signal::attach(
+        runtime::SIG::INT,
+        runtime::Task([&server, &l](runtime::TaskContext * const ctx){
+
+            if(server != NULL){
+                BOOST_TEST_MESSAGE(" * Stopping server...");
+                server->stop();
+                delete server;
+            }
+
+            BOOST_TEST_MESSAGE(" * Waiting connections on \"ws://0.0.0.0:8888/\" (Ctrl+C to restart)...");
+            server = new Server(8888, &l);
+            server->run();
+
+        })
+    );
+
+    BOOST_TEST_MESSAGE(" * Running, to close send a abort signal (kill -6 pid)...");
+    runtime::Signal::trigger(runtime::SIG::INT);
+
     while(loop);
-
     BOOST_TEST_MESSAGE(" * Stopping server...");
-    server.stop();
+    server->stop();
+    delete server;
 }

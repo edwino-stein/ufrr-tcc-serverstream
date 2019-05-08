@@ -12,11 +12,11 @@ Session::Session(WSocket * const socket, SessionListener * const listener) :
 LoopInside(), listener(listener), socket(socket), readyState(_readyState), type(_type) {
     this->_readyState = SessionLifeCycle::CONNECTING;
     this->setType(SessionMessageType::TEXT);
-    this->isDetach = false;
 }
 
 Session::~Session(){
     if(this->socket != NULL) this->close();
+    LoopInside::stop(true);
 }
 
 void Session::loop(){
@@ -30,20 +30,17 @@ void Session::loop(){
     }
     catch(system_error const& se){
 
-        if(se.code() != websocket::error::closed){
-            this->listener->onError(this, WsErrorException(se));
-        }
-        else{
-            this->_readyState = SessionLifeCycle::CLOSING;
+        if(se.code() == boost::asio::error::eof) return;
+
+        if(se.code() == websocket::error::closed){
             this->listener->onClose(this, se.code().value());
             this->close();
+            return;
         }
 
-        return;
+        this->listener->onError(this, WsErrorException(se));
     }
-    catch(std::exception const& e){
-        return;
-    }
+    catch(std::exception const& e){}
 }
 
 void Session::run(){
@@ -51,12 +48,8 @@ void Session::run(){
     LoopInside::run();
 }
 
-void Session::stop(const bool join){
-    if(!this->isDetach){
-        this->isDetach = true;
-        this->pThread.detach();
-        LoopInside::stop(join);
-    }
+void Session::stop(){
+    LoopInside::stop(false);
 }
 
 void Session::close(){
@@ -71,7 +64,23 @@ void Session::close(){
     }
 
     this->_readyState = SessionLifeCycle::CLOSED;
-    this->stop(false);
+    this->stop();
+}
+
+void Session::close(CloseCodes code){
+
+    if(this->readyState == SessionLifeCycle::CLOSED) return;
+
+    this->_readyState = SessionLifeCycle::CLOSING;
+
+    if(this->socket != NULL){
+        try{
+            this->socket->close(code);
+        }
+        catch(system_error e){}
+    }
+
+    this->close();
 }
 
 void Session::send(IOBuffer &data){

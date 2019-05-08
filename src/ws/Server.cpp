@@ -22,10 +22,10 @@ void Server::stop(){
     ServerRequestAcceptor::close();
     LoopInside::stop(true);
 
-
     this->sessionsMtx.lock();
 
     for(Vector<Session *>::iterator it = this->sessions.begin(); it != this->sessions.end(); ++it){
+        (*it)->close(CloseCodes::going_away);
         delete (*it);
     }
 

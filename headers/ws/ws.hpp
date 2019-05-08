@@ -20,6 +20,7 @@
         using HTTPWSResponse = boost::beast::websocket::response_type;
         using FlatBuffer = boost::beast::flat_buffer;
         using CloseReason = websocket::close_reason;
+        using CloseCodes = websocket::close_code;
 
         //Enums
         enum class SessionLifeCycle {

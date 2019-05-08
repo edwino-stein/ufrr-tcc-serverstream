@@ -7,8 +7,6 @@
     namespace ws {
 
         class Session : public runtime::LoopInside {
-            private:
-                bool isDetach;
 
             protected:
 
@@ -32,8 +30,9 @@
                 virtual void setType(ws::SessionMessageType type);
 
                 virtual void run() override;
-                virtual void stop(const bool join) override;
+                virtual void stop();
                 virtual void close();
+                virtual void close(ws::CloseCodes code);
         };
     }
 
