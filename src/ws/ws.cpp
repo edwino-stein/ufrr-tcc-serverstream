@@ -8,9 +8,8 @@ ws::IOBuffer ws::stringToIOBuffer(String str){
     return buffer;
 }
 
-
 String ws::ioBufferToString(ws::IOBuffer &buffer){
     std::ostringstream oss;
-    oss << boost::beast::buffers(buffer.data());
+    oss << boost::beast::make_printable(buffer.data());
     return oss.str();
 }

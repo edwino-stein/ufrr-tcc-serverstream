@@ -27,7 +27,11 @@ Session *ServerRequestAcceptor::accept(){
 
         ServerRequestAcceptor *me = this;
         WSocket *ws = new WSocket(std::move(socket));
-        ws->accept_ex(request, [&me](HTTPWSResponse& m){ me->onAccept(m); });
+
+        ws->set_option(ws::websocket::stream_base::decorator([&me](HTTPWSResponse& m){
+            me->onAccept(m);
+        }));
+        ws->accept(request);
 
         return new Session(ws, this);
     }
