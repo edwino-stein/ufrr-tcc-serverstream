@@ -1,6 +1,7 @@
 ### Project ###
 
 build/
+*.json
 
 ### Video Files ###
 *.mp4

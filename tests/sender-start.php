@@ -8,7 +8,7 @@ if(count($argv) < 2){
 $file = $argv[1];
 echo "Reference File: ", $file, "\n";
 
-if(($key = ftok("README.md", "G")) == -1){
+if(($key = ftok("$file", "G")) == -1){
     echo "ERROR: ";
     die("ftok");
 }

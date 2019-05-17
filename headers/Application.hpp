@@ -16,6 +16,7 @@
 
             enum STREAM_STATE {
                 STOPPED,
+                WAITING,
                 RUNNING,
                 ERROR
             };
@@ -31,7 +32,11 @@
             av::VideoMemoryOutput *videoOut;
             av::Transcoder *transcoder;
 
+            bool loop;
             enum STREAM_STATE state = STREAM_STATE::STOPPED;
+            bool hasUpdate;
+            String statusFile;
+
             runtime::UnixMessageQueueListener<QUEUE_MSG_BS> *mql;
 
             void initVideo(json::JsonObject cfg);
@@ -44,14 +49,19 @@
             void onStart(json::JsonObject extra);
             void onStop(json::JsonObject extra);
 
+            void updateStatusFile();
+
         public:
             virtual ~Application();
 
             static Application& app();
+            static int exit(int code);
             int main(int argc, char const *argv[]);
 
             void start();
             void stop();
+
+            void triggerStatusUpdate();
 
             //Websocket callback
             void onMessage(ws::Session * const session, ws::IOBuffer &data) override;

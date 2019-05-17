@@ -1,6 +1,7 @@
 #include "Application.hpp"
 
 #include <iostream>
+#include <fstream>
 
 #include "av/V4L2DeviceInput.hpp"
 #include "av/VideoMemoryOutput.hpp"
@@ -37,11 +38,13 @@ Application::Application(Application const&){}
 Application& Application::operator=(Application const&){ return *(Application::instance); }
 
 Application::Application(){
+    this->loop = true;
     this->server = NULL;
     this->videoIn = NULL;
     this->videoOut = NULL;
     this->transcoder = NULL;
     this->mql = NULL;
+    this->hasUpdate = true;
 }
 
 Application::~Application(){
@@ -53,38 +56,119 @@ Application& Application::app(){
     return *(Application::instance);
 }
 
+int Application::exit(int code){
+
+    if(Application::instance != NULL){
+
+        if(code != 0){
+            Application::instance->state = Application::STREAM_STATE::ERROR;
+        }
+
+        Application::instance->triggerStatusUpdate();
+        Application::instance->updateStatusFile();
+
+        delete Application::instance;
+        Application::instance = NULL;
+    }
+
+    return code;
+}
+
 int Application::main(int argc, char const *argv[]){
+
+    if(argc < 2){
+        std::cout << "Missing status file output." << '\n';
+        return 1;
+    }
+
+    this->statusFile = argv[1];
+    this->updateStatusFile();
 
     Signal::attach(runtime::SIG::INT, Task([](runtime::TaskContext * const ctx){
         std::cout << "* Received SIG::INT" << '\n';
         Application::app().stop();
-        std::exit(0);
     }));
 
-    //TODO: O arquivo para a chave da QML deve ser fornecida palo argv
-    this->mql = new UnixMessageQueueListener<QUEUE_MSG_BS>("README.md", [](String &msg){
+    this->mql = new UnixMessageQueueListener<QUEUE_MSG_BS>(this->statusFile, [](String &msg){
         Application::app().onQueueMessage(msg);
     }, true);
 
     av::initAll();
 
+    std::cout << "Status will be updated in \"" << this->statusFile << "\"..." << '\n';
     std::cout << "Waiting for command..." << '\n';
     this->mql->run();
 
     Application::STREAM_STATE s = this->state;
-    while(true){
+    this->state = Application::STREAM_STATE::WAITING;
 
-        if(s == this->state) continue;
-        s = this->state;
+    while(this->loop){
 
-        if(s == Application::STREAM_STATE::STOPPED)
-            std::cout << "STREAM_STATE::STOPPED" << '\n';
+        if(s != this->state){
 
-        if(s == Application::STREAM_STATE::RUNNING)
-            std::cout << "STREAM_STATE::RUNNING" << '\n';
+            s = this->state;
+            switch (s) {
+                case Application::STREAM_STATE::STOPPED:
+                    std::cout << "STREAM_STATE::STOPPED" << '\n';
+                break;
+                case Application::STREAM_STATE::WAITING:
+                    std::cout << "STREAM_STATE::WAITING" << '\n';
+                break;
+                case Application::STREAM_STATE::RUNNING:
+                    std::cout << "STREAM_STATE::RUNNING" << '\n';
+                break;
+                case Application::STREAM_STATE::ERROR:
+                    std::cout << "STREAM_STATE::ERROR" << '\n';
+                break;
+            }
+
+            this->triggerStatusUpdate();
+        }
+
+        this->updateStatusFile();
     }
 
     return 0;
+}
+
+void Application::updateStatusFile(){
+
+    if(!this->hasUpdate) return;
+    this->hasUpdate = false;
+
+    json::DynamicJsonDocument status(256);
+
+    switch (this->state) {
+        case Application::STREAM_STATE::STOPPED:
+            status["status"] = "STOPPED";
+        break;
+        case Application::STREAM_STATE::WAITING:
+            status["status"] = "WAITING";
+        break;
+        case Application::STREAM_STATE::RUNNING:
+            status["status"] = "RUNNING";
+        break;
+        case Application::STREAM_STATE::ERROR:
+            status["status"] = "ERROR";
+        break;
+    }
+
+    std::fstream fout;
+    fout.open(this->statusFile, std::fstream::out | std::fstream::trunc);
+
+    if(fout.good()){
+        fout << status << "\n";
+        fout.flush();
+    }
+    else{
+        std::cout << "Missing status file output." << '\n';
+    }
+
+    fout.close();
+}
+
+void Application::triggerStatusUpdate(){
+    this->hasUpdate = true;
 }
 
 void Application::onQueueMessage(String &msg){
@@ -126,12 +210,12 @@ void Application::onStart(json::JsonObject extra){
 
 void Application::onStop(json::JsonObject extra){
 
-    if(this->state == Application::STREAM_STATE::STOPPED) return;
+    if(this->state == Application::STREAM_STATE::WAITING) return;
     std::cout << "Received command stop: " << extra << std::endl;
 
     this->stopVideo();
     this->stopWs();
-    this->state = Application::STREAM_STATE::STOPPED;
+    this->state = Application::STREAM_STATE::WAITING;
 }
 
 void Application::start(){
@@ -141,6 +225,8 @@ void Application::start(){
 
 void Application::stop(){
 
+    if(this->state == Application::STREAM_STATE::STOPPED) return;
+
     this->mql->destroyQueue();
     this->mql->stop(true);
     delete this->mql;
@@ -148,6 +234,7 @@ void Application::stop(){
     this->stopVideo();
     this->stopWs();
     this->state = Application::STREAM_STATE::STOPPED;
+    this->loop = false;
 }
 
 void Application::initVideo(JsonObject cfg){

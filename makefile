@@ -54,7 +54,7 @@ DEPS = $(OBJS_FILES:$(OBJ_EXTENSION)=$(DEPENDENCE_EXTENSION))
 # Set default static library for unit tests
 l?=$(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a
 a?=
-
+f?=stats.json
 # *********************************** RULES ************************************
 .PHONY: all clean run test
 all: $(PROJECT_NAME)
@@ -77,7 +77,7 @@ $(BUILD_DIR)/%$(OBJ_EXTENSION): $(SRC_DIR)/%
 
 # Run
 run: $(BUILD_DIR)/$(PROJECT_NAME)
-	./$(BUILD_DIR)/$(PROJECT_NAME)
+	./$(BUILD_DIR)/$(PROJECT_NAME) $(f)
 
 # Unit Tests builder
 test: $(l)
