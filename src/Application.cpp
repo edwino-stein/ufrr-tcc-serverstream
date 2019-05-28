@@ -96,11 +96,11 @@ int Application::main(int argc, char const *argv[]){
     av::initAll();
 
     std::cout << "Status will be updated in \"" << this->statusFile << "\"..." << '\n';
-    std::cout << "Waiting for command..." << '\n';
+    std::cout << "Waitting for command..." << '\n';
     this->mql->run();
 
     Application::STREAM_STATE s = this->state;
-    this->state = Application::STREAM_STATE::WAITING;
+    this->state = Application::STREAM_STATE::WAITTING;
 
     while(this->loop){
 
@@ -111,8 +111,8 @@ int Application::main(int argc, char const *argv[]){
                 case Application::STREAM_STATE::STOPPED:
                     std::cout << "STREAM_STATE::STOPPED" << '\n';
                 break;
-                case Application::STREAM_STATE::WAITING:
-                    std::cout << "STREAM_STATE::WAITING" << '\n';
+                case Application::STREAM_STATE::WAITTING:
+                    std::cout << "STREAM_STATE::WAITTING" << '\n';
                 break;
                 case Application::STREAM_STATE::RUNNING:
                     std::cout << "STREAM_STATE::RUNNING" << '\n';
@@ -142,8 +142,8 @@ void Application::updateStatusFile(){
         case Application::STREAM_STATE::STOPPED:
             status["status"] = "STOPPED";
         break;
-        case Application::STREAM_STATE::WAITING:
-            status["status"] = "WAITING";
+        case Application::STREAM_STATE::WAITTING:
+            status["status"] = "WAITTING";
         break;
         case Application::STREAM_STATE::RUNNING:
             status["status"] = "RUNNING";
@@ -210,7 +210,7 @@ void Application::onStart(json::JsonObject extra){
 
 void Application::onStop(json::JsonObject extra){
 
-    if(this->state == Application::STREAM_STATE::WAITING) return;
+    if(this->state == Application::STREAM_STATE::WAITTING) return;
     std::cout << "Received command stop: " << extra << std::endl;
 
     this->stopVideo();

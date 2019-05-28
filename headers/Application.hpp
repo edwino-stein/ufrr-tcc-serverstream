@@ -16,7 +16,7 @@
 
             enum STREAM_STATE {
                 STOPPED,
-                WAITING,
+                WAITTING,
                 RUNNING,
                 ERROR
             };
