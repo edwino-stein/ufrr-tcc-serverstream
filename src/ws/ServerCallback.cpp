@@ -27,6 +27,7 @@ void ServerCallback::onError(Session * const session, WsErrorException e){
         case errc_t::bad_file_descriptor:
         case errc_t::operation_canceled:
         case errc_t::broken_pipe:
+            this->onClose(session, CloseCodes::internal_error);
             session->close(CloseCodes::internal_error);
         break;
     }

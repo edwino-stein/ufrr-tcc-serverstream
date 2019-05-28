@@ -26,14 +26,18 @@ Session *ServerRequestAcceptor::accept(){
         if(!this->isAcceptable(request)) return NULL;
 
         ServerRequestAcceptor *me = this;
-        WSocket *ws = new WSocket(std::move(socket));
+        WSocket ws(std::move(socket));
 
-        ws->set_option(ws::websocket::stream_base::decorator([&me](HTTPWSResponse& m){
+        ws.set_option(
+            websocket::stream_base::timeout::suggested(boost::beast::role_type::server)
+        );
+
+        ws.set_option(ws::websocket::stream_base::decorator([&me](HTTPWSResponse& m){
             me->onAccept(m);
         }));
-        ws->accept(request);
+        ws.accept(request);
 
-        return new Session(ws, this);
+        return new Session(std::move(ws), this);
     }
     catch(const std::exception& e){}
 

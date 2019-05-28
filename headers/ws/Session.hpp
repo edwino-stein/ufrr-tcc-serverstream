@@ -11,7 +11,7 @@
             protected:
 
                 ws::SessionListener * const listener;
-                ws::WSocket * socket;
+                ws::WSocket socket;
 
                 ws::SessionLifeCycle _readyState;
                 ws::SessionMessageType _type;
@@ -23,7 +23,7 @@
                 ws::SessionLifeCycle const &readyState;
                 ws::SessionMessageType const &type;
 
-                Session(ws::WSocket * const socket, ws::SessionListener * const listener);
+                Session(ws::WSocket &&socket, ws::SessionListener * const listener);
                 virtual ~Session();
 
                 virtual void send(IOBuffer &data);

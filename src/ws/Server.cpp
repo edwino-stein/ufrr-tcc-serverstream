@@ -25,10 +25,10 @@ void Server::stop(){
     this->sessionsMtx.lock();
 
     for(Vector<Session *>::iterator it = this->sessions.begin(); it != this->sessions.end(); ++it){
-        (*it)->close(CloseCodes::going_away);
+        this->onClose(*it, CloseCodes::going_away);
+        (*it)->close();
         delete (*it);
     }
-
     this->sessions.clear();
     this->sessionsMtx.unlock();
 }
