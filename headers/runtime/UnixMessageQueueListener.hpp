@@ -90,11 +90,13 @@
         void UnixMessageQueueListener<S>::loop(){
 
             struct MsgBuffer buf;
-            if(!UnixMessageQueue::popQueue(this->msqId, &buf, S + 1, true)) return;
+            if(UnixMessageQueue::popQueue(this->msqId, &buf, S + 1, true)){
+                buf.mtext[S] = '\0';
+                String str(buf.mtext);
+                this->callback(str);
+            }
 
-            buf.mtext[S] = '\0';
-            String str(buf.mtext);
-            this->callback(str);
+            runtime::Thread::sleep<std::chrono::milliseconds>(100);
         }
     }
 

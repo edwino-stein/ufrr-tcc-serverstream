@@ -126,6 +126,7 @@ int Application::main(int argc, char const *argv[]){
         }
 
         this->updateStatusFile();
+        runtime::Thread::sleep<std::chrono::milliseconds>(10);
     }
 
     return 0;
@@ -136,7 +137,7 @@ void Application::updateStatusFile(){
     if(!this->hasUpdate) return;
     this->hasUpdate = false;
 
-    json::DynamicJsonDocument status(256);
+    json::StaticJsonDocument<256> status;
 
     switch (this->state) {
         case Application::STREAM_STATE::STOPPED:
@@ -173,7 +174,7 @@ void Application::triggerStatusUpdate(){
 
 void Application::onQueueMessage(String &msg){
 
-    json::DynamicJsonDocument jsonMessage(JSON_BS);
+    json::StaticJsonDocument<JSON_BS> jsonMessage;
     json::deserializeJson(jsonMessage, msg);
 
     if(!jsonMessage["cmd"].is<const char *>()) return;
@@ -216,6 +217,7 @@ void Application::onStop(json::JsonObject extra){
     this->stopVideo();
     this->stopWs();
     this->state = Application::STREAM_STATE::WAITING;
+    this->state = Application::STREAM_STATE::WAITTING;
 }
 
 void Application::start(){
