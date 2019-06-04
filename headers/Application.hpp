@@ -6,6 +6,7 @@
     #include "ws/ws.hpp"
     #include "ws/ServerListener.hpp"
     #include "runtime/UnixMessageQueueListener.hpp"
+    #include "runtime/LoopTask.hpp"
 
     #define QUEUE_MSG_BS 512
     #define JSON_BS 1024
@@ -31,6 +32,10 @@
             av::V4L2DeviceInput *videoIn;
             av::VideoMemoryOutput *videoOut;
             av::Transcoder *transcoder;
+
+            Mutex broadcastQueueMtx;
+            Queue<ws::IOBuffer> broadcastQueue;
+            runtime::LoopTask *broadcastTask;
 
             bool loop;
             enum STREAM_STATE state = STREAM_STATE::STOPPED;

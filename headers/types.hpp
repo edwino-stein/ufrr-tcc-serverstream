@@ -5,6 +5,7 @@
     #include <vector>
     #include <functional>
     #include <mutex>
+    #include <queue>
 
     //Submodulos
     #include "ArduinoJson.h"
@@ -13,6 +14,7 @@
     template <class T> using Vector = std::vector<T>;
     template <class T> using AFunction = std::function<T>;
     using Mutex = std::mutex;
+    template <class T> using Queue = std::queue<T>;
     namespace json = ArduinoJson;
 
 #endif

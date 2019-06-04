@@ -44,6 +44,7 @@ Application::Application(){
     this->videoOut = NULL;
     this->transcoder = NULL;
     this->mql = NULL;
+    this->broadcastTask = NULL;
     this->hasUpdate = true;
 }
 
@@ -216,11 +217,12 @@ void Application::onStop(json::JsonObject extra){
 
     this->stopVideo();
     this->stopWs();
-    this->state = Application::STREAM_STATE::WAITING;
+
     this->state = Application::STREAM_STATE::WAITTING;
 }
 
 void Application::start(){
+    if(this->broadcastTask != NULL) this->broadcastTask->run();
     if(this->server != NULL) this->server->run();
     if(this->transcoder != NULL) this->transcoder->run();
 }
@@ -246,14 +248,16 @@ void Application::initVideo(JsonObject cfg){
     this->videoIn = new V4L2DeviceInput(cfg["inputDevice"].as<const char *>());
     this->videoOut = new VideoMemoryOutput([](uint8_t * const data, const int size, VideoMemoryOutput * const vmo){
 
-        IOBuffer buffer;
+        if(Application::app().server == NULL) return 0;
+
         boost::asio::const_buffer cbf = boost::asio::buffer(data, size);
+        IOBuffer buffer;
         size_t n = boost::asio::buffer_copy(buffer.prepare(size), cbf);
         buffer.commit(n);
 
-        //TODO: Será adicionada numa fila e enviado por outra thread
-        if(Application::app().server != NULL)
-            Application::app().server->broadcast(buffer);
+        Application::app().broadcastQueueMtx.lock();
+        Application::app().broadcastQueue.push(buffer);
+        Application::app().broadcastQueueMtx.unlock();
 
         return 0;
     });
@@ -284,10 +288,25 @@ void Application::stopVideo(){
 }
 
 void Application::stopWs(){
+
     if(this->server != NULL){
         this->server->stop();
         delete this->server;
         this->server = NULL;
+    }
+
+    if(this->broadcastTask != NULL){
+        this->broadcastTask->stop();
+        delete this->broadcastTask;
+        this->broadcastTask = NULL;
+
+        this->broadcastQueueMtx.lock();
+
+        //Flush the output queue
+        while(!this->broadcastQueue.empty()){
+            this->broadcastQueue.pop();
+        }
+        this->broadcastQueueMtx.unlock();
     }
 }
 
@@ -299,6 +318,23 @@ void Application::initWs(json::JsonObject cfg){
     if(port < 0 || port > 65535) throw InvalidJsonConfigException("serverPort", "Int ([0,65535])");
 
     this->server = new Server(port, this);
+
+    this->broadcastTask = new runtime::LoopTask([](runtime::TaskContext * const ctx){
+
+        Application &me = Application::app();
+
+        me.broadcastQueueMtx.lock();
+        if(me.broadcastQueue.empty()){
+            me.broadcastQueueMtx.unlock();
+            return;
+        }
+
+        IOBuffer buffer = me.broadcastQueue.front();
+        me.broadcastQueue.pop();
+        me.broadcastQueueMtx.unlock();
+
+        if(me.server != NULL) me.server->broadcast(buffer);
+    });
 }
 
 void Application::onMessage(Session * const session, IOBuffer &data){}
