@@ -111,11 +111,11 @@ void FilterGraph::init(VideoInput * const in, VideoOutput * const out){
 }
 
 bool FilterGraph::push(AVFrame * const frame) const {
-    return av_buffersrc_add_frame_flags(this->srcCtx, frame, 0) >= 0;
+    return av_buffersrc_add_frame(this->srcCtx, frame) >= 0;
 }
 
 bool FilterGraph::pop(AVFrame * frame) const {
-    return av_buffersink_get_frame(this->sinkCtx, frame) >= 0;    
+    return av_buffersink_get_frame(this->sinkCtx, frame) >= 0;
 }
 
 String FilterGraph::parseInputArgs(VideoInput * const in) const {

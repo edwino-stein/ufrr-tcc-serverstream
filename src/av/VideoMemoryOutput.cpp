@@ -15,7 +15,7 @@ using exceptions::InvalidJsonConfigException;
 
 VideoMemoryOutput::VideoMemoryOutput(memoryWriteHandle callback) : VideoFileOutput("Video Memory Output"), avioCtx(_avioCtx) {
     this->callback = callback;
-    this->avioBufferSize = 8096;
+    this->avioBufferSize = 8192;
     this->avioBufferCtx = NULL;
     this->_avioCtx = NULL;
 }

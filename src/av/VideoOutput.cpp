@@ -71,11 +71,9 @@ void VideoOutput::openFile(String &fileName, AVDictionary **options){
 
     int r = 0;
 
-    strcpy(this->formatCtx->filename, fileName.c_str());
-
     r = avio_open(
         &(this->formatCtx->pb),
-        this->formatCtx->filename,
+        fileName.c_str(),
         AVIO_FLAG_WRITE
     );
 

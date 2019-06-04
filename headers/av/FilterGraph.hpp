@@ -9,10 +9,10 @@
 
             protected:
 
-                AVFilter *src;
+                const AVFilter *src;
                 AVFilterContext *srcCtx;
 
-                AVFilter *sink;
+                const AVFilter *sink;
                 AVFilterContext *sinkCtx;
 
                 AVFilterGraph *fg;

@@ -11,7 +11,7 @@ INCLUDES = $(HEADER_DIR) includes/ArduinoJson includes/boost.beast/include
 MACROS =
 STATIC_LIBRARIES =
 DLIBRARIES_PATH =
-DYNAMIC_LIBRARIES = boost_system dl avcodec avdevice avfilter avformat avutil pthread
+DYNAMIC_LIBRARIES = boost_system dl avcodec avdevice avfilter avformat avutil pthread atomic
 
 # Unit tests settings
 EXCLUDE_FILES = main.cpp
