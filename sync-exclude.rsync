@@ -1,0 +1,11 @@
+.git*
+includes
+build
+*.json
+*.mp4
+*.webm
+*.mkv
+*.mts
+*.mpeg
+*.mpg
+*.h264

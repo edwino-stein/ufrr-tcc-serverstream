@@ -57,6 +57,7 @@ a?=
 f?=stats.json
 # *********************************** RULES ************************************
 .PHONY: all clean run test
+
 all: $(PROJECT_NAME)
 clean:
 	rm -rf $(BUILD_DIR)
@@ -77,7 +78,7 @@ $(BUILD_DIR)/%$(OBJ_EXTENSION): $(SRC_DIR)/%
 
 # Run
 run: $(BUILD_DIR)/$(PROJECT_NAME)
-	./$(BUILD_DIR)/$(PROJECT_NAME) $(f)
+	./$< $(f)
 
 # Unit Tests builder
 test: $(l)
@@ -91,3 +92,5 @@ $(BUILD_DIR)/$(PROJECT_NAME)-utest-all.a: $(OBJS_UTEST_FILES)
 
 # Include all .d files
 -include $(DEPS)
+
+include sync.mk

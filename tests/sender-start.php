@@ -35,7 +35,7 @@ $cmd  = [
         'decoder' => [
             'width' => 640,
             'height' => 480,
-            'framerate' => 30,
+            'framerate' => 90,
             'rescaleTs' => false
         ],
         'encoder' => [
@@ -44,9 +44,14 @@ $cmd  = [
             'width' => 640,
             'height' => 480,
             'framerate' => 30,
-            'bitrate' => 1000000,
+            'bitrate' => 2000000,
             'bframes' => 0,
-            'rescaleTs' => true
+            'gop' => 10,
+            'qblur' => 0.0,
+            'qmax' => 26,
+            'qmin' => 12,
+            'compressionLevel' => 0,
+            'rescaleTs' => true,
         ]
     ]
 ];
