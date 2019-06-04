@@ -118,7 +118,7 @@ void Transcoder::init(json::JsonObject cfg){
                     av_frame_unref(frame);
                 }
     	    }
-            catch(Exception e){}
+            catch(Exception &e){}
         }
 
         av_frame_free(&frame);

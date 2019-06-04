@@ -84,7 +84,7 @@ void Session::close(CloseCodes code){
     try{
         this->socket.close(code);
     }
-    catch(system_error e){}
+    catch(system_error &e){}
 
     this->close();
 }
