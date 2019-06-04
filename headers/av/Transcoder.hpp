@@ -14,6 +14,8 @@
                 av::VideoInput * const decoder;
                 runtime::LoopTask *decoderTask;
                 bool decodeRescaleTs;
+                unsigned short skipFrames;
+                unsigned short skippedFrames;
 
                 bool _readError;
 

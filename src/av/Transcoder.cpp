@@ -24,6 +24,8 @@ Transcoder::Transcoder(VideoInput *const decoder, VideoOutput * const encoder) :
     this->_readError = true;
     this->decodeRescaleTs = false;
     this->encodeRescaleTs = true;
+    this->skipFrames = 0;
+    this->skippedFrames = 0;
 }
 
 Transcoder::~Transcoder(){
@@ -47,9 +49,7 @@ Transcoder::~Transcoder(){
 }
 
 void Transcoder::onDecoded(AVFrame *frame){
-
     frame->pts = frame->best_effort_timestamp;
-
     this->filterGraphMtx.lock();
     this->filterGraph->push(frame);
     this->filterGraphMtx.unlock();
@@ -68,18 +68,36 @@ void Transcoder::init(json::JsonObject cfg){
     this->filterGraph = new FilterGraph();
     this->filterGraph->init(this->decoder, this->encoder);
 
+    int decoderFR = this->decoder->codecCtx->time_base.den;
+    int encoderFR = this->encoder->codecCtx->time_base.den;
+    this->skipFrames = (unsigned short) (decoderFR/encoderFR);
+
     this->decoderTask = new LoopTask(this, [](TaskContext * const ctx){
 
         Transcoder * const me = (Transcoder * const) ctx;
         if(me->readError) return;
 
+        AVPacket *packet = av_packet_alloc();
+
         try{
-            if(me->decoder->read(me->decodeRescaleTs)) me->decoder->decode(me);
+            if(me->decoder->read(me->decodeRescaleTs, packet)){
+                if(me->skippedFrames == 0){
+                    me->decoder->push(packet);
+                    me->decoder->decode(me);
+                }
+            }
             else me->_readError = true;
+
+            me->skippedFrames++;
+            if(me->skippedFrames >= me->skipFrames){
+                me->skippedFrames = 0;
+            }
         }
         catch(Exception &e){
             me->_readError = true;
         }
+
+        av_packet_free(&packet);
     });
 
     this->encoderTask = new LoopTask(this, [](TaskContext * const ctx){
@@ -94,8 +112,13 @@ void Transcoder::init(json::JsonObject cfg){
             me->filterGraphMtx.lock();
             hasFrame = me->filterGraph->pop(frame);
             me->filterGraphMtx.unlock();
-
-            if(hasFrame) me->encoder->encode(frame, me->encodeRescaleTs);
+    	    try{
+               	if(hasFrame){
+                    me->encoder->encode(frame, me->encodeRescaleTs);
+                    av_frame_unref(frame);
+                }
+    	    }
+            catch(Exception e){}
         }
 
         av_frame_free(&frame);
