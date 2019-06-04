@@ -24,15 +24,14 @@ void VideoFileOutput::init(){
     doc["width"] = 640;
     doc["height"] = 480;
     doc["bitrate"] = 1000000;
-    doc["framerate"] = 25;
+    doc["framerate"] = 30;
     doc["pixfmt"] = "yuv420p";
-    doc["bframes"] = 0;
 
     this->init(doc.as<JsonObject>());
 }
 
 void VideoFileOutput::init(JsonObject cfg){
-    
+
     if(!cfg["demuxer"].is<const char *>())
         throw InvalidJsonConfigException("demuxer", "string");
 
@@ -51,9 +50,6 @@ void VideoFileOutput::init(JsonObject cfg){
     if(!cfg["framerate"].is<int>())
         throw InvalidJsonConfigException("framerate", "int");
 
-    if(!cfg["bframes"].is<int>())
-        cfg["bframes"] = 0;
-
     enum AVPixelFormat pixFmt = AV_PIX_FMT_NONE;
 
     if(cfg["pixfmt"].is<const char *>()){
@@ -66,12 +62,32 @@ void VideoFileOutput::init(JsonObject cfg){
     this->initVideoStream();
 
     this->initCodec([&cfg, &pixFmt](AVCodecContext *codecCtx, AVCodec *codec){
+
         codecCtx->width = std::abs(cfg["width"].as<int>());
         codecCtx->height = std::abs(cfg["height"].as<int>());
         codecCtx->bit_rate = std::abs(cfg["bitrate"].as<int>());
-        codecCtx->pix_fmt = pixFmt;
         codecCtx->time_base = (AVRational){1, std::abs(cfg["framerate"].as<int>())};
-        codecCtx->max_b_frames = std::abs(cfg["bframes"].as<int>());
+        codecCtx->framerate = (AVRational){std::abs(cfg["framerate"].as<int>()), 1};
+
+        codecCtx->pix_fmt = pixFmt;
+
+        if(cfg["bframes"].is<int>())
+            codecCtx->max_b_frames = std::abs(cfg["bframes"].as<int>());
+
+        if(cfg["gop"].is<int>())
+            codecCtx->gop_size = std::abs(cfg["gop"].as<int>());
+
+        if(cfg["qblur"].is<float>())
+            codecCtx->qblur = std::abs(cfg["qblur"].as<float>());
+
+        if(cfg["qmax"].is<int>())
+            codecCtx->qmax = std::abs(cfg["qmax"].as<int>());
+
+        if(cfg["qmin"].is<int>())
+            codecCtx->qmin = std::abs(cfg["qmin"].as<int>());
+
+        if(cfg["compressionLevel"].is<int>())
+            codecCtx->compression_level = std::abs(cfg["compressionLevel"].as<int>());
     });
 
     this->openFile(this->fileName);

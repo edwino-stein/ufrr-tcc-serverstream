@@ -22,7 +22,7 @@ bool VideoOutput::encode(AVFrame *const frame, const bool rescaleTs) const {
     r = avcodec_send_frame(this->codecCtx, frame);
     if(r < 0){
         if(r == AVERROR(EAGAIN)) return false;
-        throw AvErrorException(r, ReturnValueException("avcodec_send_frame", r)); 
+        throw AvErrorException(r, ReturnValueException("avcodec_send_frame", r));
     }
 
     AVPacket *packet = av_packet_alloc();
@@ -62,10 +62,10 @@ void VideoOutput::openFile(String &fileName, AVDictionary **options){
 
     if(this->formatCtx == NULL)
         throw AvErrorException(AVERROR_INVALIDDATA, Exception("Video format not initialized"));
-    
+
     if(this->videoStream == NULL)
         throw AvErrorException(AVERROR_STREAM_NOT_FOUND, Exception("Video stream not initialized."));
-    
+
     if(this->codecCtx == NULL)
         throw AvErrorException(AVERROR_FILTER_NOT_FOUND, Exception("Video codec not initialized."));
 
@@ -108,7 +108,7 @@ void VideoOutput::initFormat(String demuxer, String codec){
 }
 
 void VideoOutput::initVideoStream(){
-    
+
     if(this->formatCtx == NULL)
         throw AvErrorException(AVERROR_STREAM_NOT_FOUND, Exception("Video format not initialized."));
 
@@ -124,7 +124,7 @@ void VideoOutput::initCodec(AFunction<void(AVCodecContext *, AVCodec *)> setupCo
 
     if(this->formatCtx == NULL)
         throw AvErrorException(AVERROR_DECODER_NOT_FOUND, Exception("Video format not initialized"));
-    
+
     int r = 0;
 
     this->_codec = avcodec_find_encoder(this->format->video_codec);
@@ -137,20 +137,21 @@ void VideoOutput::initCodec(AFunction<void(AVCodecContext *, AVCodec *)> setupCo
 
     this->codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
     this->codecCtx->codec_id = this->format->video_codec;
-    setupCodec(this->codecCtx, this->codec);
-
-    if(this->codecCtx->pix_fmt == AV_PIX_FMT_NONE){
-        this->codecCtx->pix_fmt = this->codec->pix_fmts != NULL ? this->codec->pix_fmts[0] : AV_PIX_FMT_NONE; 
-    }
 
     if(this->formatCtx->oformat->flags & AVFMT_GLOBALHEADER){
-        this->codecCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        this->codecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
     }
 
     r = avcodec_parameters_from_context(this->videoStream->codecpar, this->codecCtx);
     if (r < 0)
         throw AvErrorException(r, ReturnValueException("avcodec_parameters_from_context", r));
-    
+
+    setupCodec(this->codecCtx, this->codec);
+
+    if(this->codecCtx->pix_fmt == AV_PIX_FMT_NONE){
+        this->codecCtx->pix_fmt = this->codec->pix_fmts != NULL ? this->codec->pix_fmts[0] : AV_PIX_FMT_NONE;
+    }
+
     this->videoStream->time_base = this->codecCtx->time_base;
 
     r = avcodec_open2(this->codecCtx, this->codec, NULL);
