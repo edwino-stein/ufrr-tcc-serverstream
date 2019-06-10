@@ -34,6 +34,7 @@
 
         //Functions
         IOBuffer stringToIOBuffer(String str);
+        IOBuffer bytesToIoBuffer(unsigned char data[], const size_t length);
         String ioBufferToString(IOBuffer &buffer);
 
         //Classes
