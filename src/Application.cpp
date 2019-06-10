@@ -1,327 +1,70 @@
 #include "Application.hpp"
 
 #include <iostream>
-#include <fstream>
 
-#include "av/V4L2DeviceInput.hpp"
-#include "av/VideoMemoryOutput.hpp"
-#include "av/Transcoder.hpp"
-
+#include "ws/ws.hpp"
 #include "ws/Session.hpp"
 #include "ws/Server.hpp"
-
+#include "ffmpeg/FfmpegTcp.hpp"
+#include "runtime/LoopTask.hpp"
 #include "runtime/Signal.hpp"
 #include "runtime/Task.hpp"
-#include "exceptions/Exception.hpp"
-#include "exceptions/InvalidJsonConfigException.hpp"
-
-using av::V4L2DeviceInput;
-using av::VideoMemoryOutput;
-using av::Transcoder;
+#include "exceptions/WsErrorException.hpp"
 
 using ws::Server;
 using ws::Session;
 using ws::IOBuffer;
 using ws::HTTPRequest;
 using ws::HTTPWSResponse;
+using ffmpeg::FfmpegTcp;
 
 using runtime::Signal;
 using runtime::Task;
-using runtime::UnixMessageQueueListener;
-using json::JsonObject;
-using exceptions::Exception;
-using exceptions::InvalidJsonConfigException;
 using exceptions::WsErrorException;
 
-Application* Application::instance = NULL;
-Application::Application(Application const&){}
-Application& Application::operator=(Application const&){ return *(Application::instance); }
-
-Application::Application(){
-    this->loop = true;
-    this->server = NULL;
-    this->videoIn = NULL;
-    this->videoOut = NULL;
-    this->transcoder = NULL;
-    this->mql = NULL;
-    this->broadcastTask = NULL;
-    this->hasUpdate = true;
-}
-
-Application::~Application(){
-    this->stop();
-}
-
-Application& Application::app(){
-    if(Application::instance == NULL) Application::instance = new Application();
-    return *(Application::instance);
-}
-
-int Application::exit(int code){
-
-    if(Application::instance != NULL){
-
-        if(code != 0){
-            Application::instance->state = Application::STREAM_STATE::ERROR;
-        }
-
-        Application::instance->triggerStatusUpdate();
-        Application::instance->updateStatusFile();
-
-        delete Application::instance;
-        Application::instance = NULL;
-    }
-
-    return code;
-}
+Application::Application() : loop(true){}
+Application::~Application(){}
 
 int Application::main(int argc, char const *argv[]){
 
+    Application &me = *this;
+
     if(argc < 2){
-        std::cout << "Missing status file output." << '\n';
+        std::cerr << "Missing port for Websocket server" << '\n';
         return 1;
     }
 
-    this->statusFile = argv[1];
-    this->updateStatusFile();
+    unsigned int wsPort = std::atoi(argv[1]);
+    if(!this->isValidPort(wsPort)){
+        std::cerr << "Invalid port for Websocket server" << '\n';
+        return 1;
+    }
 
-    Signal::attach(runtime::SIG::INT, Task([](runtime::TaskContext * const ctx){
+    if(argc < 3){
+        std::cerr << "Missing port for FFMPEG TCP client" << '\n';
+        return 1;
+    }
+
+    unsigned int ffmpegPort = std::atoi(argv[2]);
+    if(!this->isValidPort(ffmpegPort)){
+        std::cerr << "Invalid port for FFMPEG TCP client" << '\n';
+        return 1;
+    }
+
+    size_t ffmpegBuffer = 1024;
+    if(argc >= 4){
+        ffmpegBuffer = std::atoi(argv[3]);
+    }
+
+    Signal::attach(runtime::SIG::INT, Task([&me](runtime::TaskContext * const ctx){
         std::cout << "* Received SIG::INT" << '\n';
-        Application::app().stop();
+        me.loop = false;
     }));
 
-    this->mql = new UnixMessageQueueListener<QUEUE_MSG_BS>(this->statusFile, [](String &msg){
-        Application::app().onQueueMessage(msg);
-    }, true);
+    Server wsServer(wsPort, *this);
+    FfmpegTcp ffmpeg(ffmpegPort, ffmpegBuffer, *this);
 
-    av::initAll();
-
-    std::cout << "Status will be updated in \"" << this->statusFile << "\"..." << '\n';
-    std::cout << "Waitting for command..." << '\n';
-    this->mql->run();
-
-    Application::STREAM_STATE s = this->state;
-    this->state = Application::STREAM_STATE::WAITTING;
-
-    while(this->loop){
-
-        if(s != this->state){
-
-            s = this->state;
-            switch (s) {
-                case Application::STREAM_STATE::STOPPED:
-                    std::cout << "STREAM_STATE::STOPPED" << '\n';
-                break;
-                case Application::STREAM_STATE::WAITTING:
-                    std::cout << "STREAM_STATE::WAITTING" << '\n';
-                break;
-                case Application::STREAM_STATE::RUNNING:
-                    std::cout << "STREAM_STATE::RUNNING" << '\n';
-                break;
-                case Application::STREAM_STATE::ERROR:
-                    std::cout << "STREAM_STATE::ERROR" << '\n';
-                break;
-            }
-
-            this->triggerStatusUpdate();
-        }
-
-        this->updateStatusFile();
-        runtime::Thread::sleep<std::chrono::milliseconds>(10);
-    }
-
-    return 0;
-}
-
-void Application::updateStatusFile(){
-
-    if(!this->hasUpdate) return;
-    this->hasUpdate = false;
-
-    json::StaticJsonDocument<256> status;
-
-    switch (this->state) {
-        case Application::STREAM_STATE::STOPPED:
-            status["status"] = "STOPPED";
-        break;
-        case Application::STREAM_STATE::WAITTING:
-            status["status"] = "WAITTING";
-        break;
-        case Application::STREAM_STATE::RUNNING:
-            status["status"] = "RUNNING";
-        break;
-        case Application::STREAM_STATE::ERROR:
-            status["status"] = "ERROR";
-        break;
-    }
-
-    std::fstream fout;
-    fout.open(this->statusFile, std::fstream::out | std::fstream::trunc);
-
-    if(fout.good()){
-        fout << status << "\n";
-        fout.flush();
-    }
-    else{
-        std::cout << "Missing status file output." << '\n';
-    }
-
-    fout.close();
-}
-
-void Application::triggerStatusUpdate(){
-    this->hasUpdate = true;
-}
-
-void Application::onQueueMessage(String &msg){
-
-    json::StaticJsonDocument<JSON_BS> jsonMessage;
-    json::deserializeJson(jsonMessage, msg);
-
-    if(!jsonMessage["cmd"].is<const char *>()) return;
-    String cmd(jsonMessage["cmd"].as<const char *>());
-
-    if(cmd == "start")
-        return this->onStart(jsonMessage["extra"].as<json::JsonObject>());
-
-    if(cmd == "stop")
-        return this->onStop(jsonMessage["extra"].as<json::JsonObject>());
-}
-
-void Application::onStart(json::JsonObject extra){
-
-    if(this->state == Application::STREAM_STATE::RUNNING) return;
-    if(extra.isNull()) return;
-
-    std::cout << "Received command start: " << extra << std::endl;
-
-    try{
-        this->initWs(extra);
-        this->initVideo(extra);
-    }
-    catch(Exception &e){
-        this->stopVideo();
-        this->stopWs();
-        std::cout << e.what() << '\n';
-        return;
-    }
-
-    this->start();
-    this->state = Application::STREAM_STATE::RUNNING;
-}
-
-void Application::onStop(json::JsonObject extra){
-
-    if(this->state == Application::STREAM_STATE::WAITTING) return;
-    std::cout << "Received command stop: " << extra << std::endl;
-
-    this->stopVideo();
-    this->stopWs();
-
-    this->state = Application::STREAM_STATE::WAITTING;
-}
-
-void Application::start(){
-    if(this->broadcastTask != NULL) this->broadcastTask->run();
-    if(this->server != NULL) this->server->run();
-    if(this->transcoder != NULL) this->transcoder->run();
-}
-
-void Application::stop(){
-
-    if(this->state == Application::STREAM_STATE::STOPPED) return;
-
-    this->mql->destroyQueue();
-    this->mql->stop(true);
-    delete this->mql;
-
-    this->stopVideo();
-    this->stopWs();
-    this->state = Application::STREAM_STATE::STOPPED;
-    this->loop = false;
-}
-
-void Application::initVideo(JsonObject cfg){
-
-    if(!cfg["inputDevice"].is<const char *>()) throw InvalidJsonConfigException("inputDevice", "String");
-
-    this->videoIn = new V4L2DeviceInput(cfg["inputDevice"].as<const char *>());
-    this->videoOut = new VideoMemoryOutput([](uint8_t * const data, const int size, VideoMemoryOutput * const vmo){
-
-        if(Application::app().server == NULL) return 0;
-
-        boost::asio::const_buffer cbf = boost::asio::buffer(data, size);
-        IOBuffer buffer;
-        size_t n = boost::asio::buffer_copy(buffer.prepare(size), cbf);
-        buffer.commit(n);
-
-        Application::app().broadcastQueueMtx.lock();
-        Application::app().broadcastQueue.push(buffer);
-        Application::app().broadcastQueueMtx.unlock();
-
-        return 0;
-    });
-
-    this->transcoder = new Transcoder(this->videoIn, this->videoOut);
-    this->transcoder->init(cfg);
-}
-
-void Application::stopVideo(){
-
-    if(this->transcoder != NULL){
-        this->transcoder->stop();
-        delete this->transcoder;
-        this->transcoder = NULL;
-    }
-
-    if(this->videoOut != NULL){
-        this->videoOut->close();
-        delete this->videoOut;
-        this->videoOut = NULL;
-    }
-
-    if(this->videoIn != NULL){
-        this->videoIn->close();
-        delete this->videoIn;
-        this->videoIn = NULL;
-    }
-}
-
-void Application::stopWs(){
-
-    if(this->server != NULL){
-        this->server->stop();
-        delete this->server;
-        this->server = NULL;
-    }
-
-    if(this->broadcastTask != NULL){
-        this->broadcastTask->stop();
-        delete this->broadcastTask;
-        this->broadcastTask = NULL;
-
-        this->broadcastQueueMtx.lock();
-
-        //Flush the output queue
-        while(!this->broadcastQueue.empty()){
-            this->broadcastQueue.pop();
-        }
-        this->broadcastQueueMtx.unlock();
-    }
-}
-
-void Application::initWs(json::JsonObject cfg){
-
-    if(!cfg["serverPort"].is<int>()) throw InvalidJsonConfigException("serverPort", "Int ([0,65535])");
-
-    int port = cfg["serverPort"];
-    if(port < 0 || port > 65535) throw InvalidJsonConfigException("serverPort", "Int ([0,65535])");
-
-    this->server = new Server(port, this);
-
-    this->broadcastTask = new runtime::LoopTask([](runtime::TaskContext * const ctx){
-
-        Application &me = Application::app();
+    runtime::LoopTask broadcastTask([&me, &wsServer](runtime::TaskContext * const ctx){
 
         me.broadcastQueueMtx.lock();
         if(me.broadcastQueue.empty()){
@@ -329,24 +72,43 @@ void Application::initWs(json::JsonObject cfg){
             return;
         }
 
-        IOBuffer buffer = me.broadcastQueue.front();
+        IOBuffer buffer(me.broadcastQueue.front());
         me.broadcastQueue.pop();
         me.broadcastQueueMtx.unlock();
 
-        if(me.server != NULL) me.server->broadcast(buffer);
+        wsServer.broadcast(buffer);
     });
+
+    wsServer.run();
+    broadcastTask.run();
+    ffmpeg.run();
+
+    while(this->loop);
+
+    ffmpeg.stop();
+    wsServer.stop();
+    broadcastTask.stop(true);
+
+    return 0;
 }
 
-void Application::onMessage(Session * const session, IOBuffer &data){}
+void Application::onFfmpegReceive(unsigned char data[], const size_t length){
+    IOBuffer buffer(ws::bytesToIoBuffer(data, length));
+    this->broadcastQueueMtx.lock();
+    this->broadcastQueue.push(buffer);
+    this->broadcastQueueMtx.unlock();
+}
 
-void Application::onClose(Session * const session, const int code){
+bool Application::isValidPort(const unsigned int port) const {
+    return (port > 0) && (port < 65535);
+}
+
+void Application::onClose(Session &session, const int code){
     std::cout << "Connection closed" << '\n';
 }
 
-void Application::onError(Session * const session, WsErrorException e){}
-
-void Application::onConnection(Session * const session){
-    session->setType(ws::SessionMessageType::BINARY);
+void Application::onConnection(Session &session){
+    session.setType(ws::SessionMessageType::BINARY);
     std::cout << "New connection" << '\n';
 }
 
@@ -358,3 +120,6 @@ void Application::onAccept(HTTPWSResponse &response){
     response.insert(ws::http::field::server, "MPEG1 Video WS Streamer");
     response.insert(ws::http::field::sec_websocket_protocol, "ws-mpegts");
 }
+
+void Application::onMessage(Session &session, IOBuffer &data){}
+void Application::onError(Session &session, WsErrorException e){}
