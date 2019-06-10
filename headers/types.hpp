@@ -9,15 +9,11 @@
 
     #include <boost/asio.hpp>
 
-    //Submodulos
-    #include "ArduinoJson.h"
-
     using String = std::string;
     template <class T> using Vector = std::vector<T>;
     template <class T> using AFunction = std::function<T>;
     using Mutex = std::mutex;
     template <class T> using Queue = std::queue<T>;
-    namespace json = ArduinoJson;
 
     //Boost.asio alias types
     namespace net {
