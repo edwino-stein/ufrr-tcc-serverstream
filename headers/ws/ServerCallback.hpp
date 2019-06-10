@@ -9,17 +9,17 @@
         class ServerCallback : public ws::SessionListener {
 
             protected:
-                ws::ServerListener * const listener;
+                ws::ServerListener &listener;
 
             public:
 
-                ServerCallback(ws::ServerListener * const listener);
+                ServerCallback(ws::ServerListener &listener);
                 virtual ~ServerCallback();
 
                 //Session proxy events
-                virtual void onMessage(ws::Session * const session, IOBuffer &data) override;
-                virtual void onClose(ws::Session * const session, const int code) override;
-                virtual void onError(ws::Session * const session, exceptions::WsErrorException e) override;
+                virtual void onMessage(ws::Session &session, ws::IOBuffer &data) override;
+                virtual void onClose(ws::Session &session, const int code) override;
+                virtual void onError(ws::Session &session, exceptions::WsErrorException e) override;
         };
     }
 

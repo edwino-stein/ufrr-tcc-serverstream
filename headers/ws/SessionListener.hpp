@@ -12,9 +12,9 @@
 
                 virtual ~SessionListener();
 
-                virtual void onMessage(ws::Session * const session, IOBuffer &data)=0;
-                virtual void onClose(ws::Session * const session, const int code)=0;
-                virtual void onError(ws::Session * const session, exceptions::WsErrorException e)=0;
+                virtual void onMessage(ws::Session &session, ws::IOBuffer &data)=0;
+                virtual void onClose(ws::Session &session, const int code)=0;
+                virtual void onError(ws::Session &session, exceptions::WsErrorException e)=0;
         };
     }
 

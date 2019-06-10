@@ -8,7 +8,7 @@ using exceptions::WsErrorException;
 using boost::system::system_error;
 using boost::system::error_code;
 
-Session::Session(WSocket &&socket, SessionListener * const listener) :
+Session::Session(WSocket &&socket, SessionListener &listener) :
     LoopInside(), listener(listener), socket(std::move(socket)),
     readyState(_readyState), type(_type) {
 
@@ -28,22 +28,22 @@ void Session::loop(){
     IOBuffer buffer;
 
     try{
-        if(this->socket.read(buffer) > 0) this->listener->onMessage(this, buffer);
+        if(this->socket.read(buffer) > 0) this->listener.onMessage(*this, buffer);
     }
     catch(system_error const& se){
 
         if(se.code() == boost::asio::error::eof) return;
 
         if(se.code() == websocket::error::closed){
-            this->listener->onClose(this, se.code().value());
+            this->listener.onClose(*this, se.code().value());
             this->close();
             return;
         }
 
-        this->listener->onError(this, WsErrorException(se));
+        this->listener.onError(*this, WsErrorException(se));
     }
     catch(std::exception const& e){
-        this->listener->onClose(this, CloseCodes::internal_error);
+        this->listener.onClose(*this, CloseCodes::internal_error);
         this->close();
         return;
     }
@@ -97,7 +97,7 @@ void Session::send(IOBuffer &data){
         this->socket.write(data.data());
     }
     catch(system_error const& e){
-        this->listener->onError(this, WsErrorException(e));
+        this->listener.onError(*this, WsErrorException(e));
     }
 }
 

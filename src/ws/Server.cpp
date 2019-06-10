@@ -9,7 +9,7 @@ using namespace net;
 using runtime::LoopInside;
 using exceptions::Exception;
 
-Server::Server(const int port, ws::ServerListener * const listener):
+Server::Server(const int port, ws::ServerListener &listener):
 LoopInside(), ServerRequestAcceptor(port, listener){}
 
 Server::~Server(){
@@ -26,7 +26,7 @@ void Server::stop(){
     this->sessionsMtx.lock();
 
     for(Vector<Session *>::iterator it = this->sessions.begin(); it != this->sessions.end(); ++it){
-        this->onClose(*it, CloseCodes::going_away);
+        this->onClose(*(*it), CloseCodes::going_away);
         (*it)->close();
         delete (*it);
     }
@@ -44,7 +44,7 @@ void Server::loop(){
         this->sessionsMtx.unlock();
 
         session->run();
-        this->listener->onConnection(session);
+        this->listener.onConnection(*session);
     }
 
     this->clearup();

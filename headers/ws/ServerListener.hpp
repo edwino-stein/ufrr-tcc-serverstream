@@ -11,7 +11,7 @@
 
                 virtual ~ServerListener();
 
-                virtual void onConnection(ws::Session * const session)=0;
+                virtual void onConnection(ws::Session &session)=0;
                 virtual bool onIsAcceptable(ws::HTTPRequest &request)=0;
                 virtual void onAccept(ws::HTTPWSResponse &response)=0;
         };

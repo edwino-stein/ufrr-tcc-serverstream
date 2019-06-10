@@ -7,7 +7,7 @@ using namespace ws;
 using namespace net;
 using exceptions::Exception;
 
-ServerRequestAcceptor::ServerRequestAcceptor(const int port, ws::ServerListener * const listener):
+ServerRequestAcceptor::ServerRequestAcceptor(const int port, ws::ServerListener &listener):
 ServerCallback(listener), ioCtx(1), endPoint(EndPoint(tcp::v4(), port)), acceptor(Acceptor(ioCtx, endPoint)){
     this->acceptor.non_blocking(true);
 }
@@ -38,7 +38,7 @@ Session *ServerRequestAcceptor::accept(){
         }));
         ws.accept(request);
 
-        return new Session(std::move(ws), this);
+        return new Session(std::move(ws), *this);
     }
     catch(const std::exception& e){}
 
@@ -51,9 +51,9 @@ void ServerRequestAcceptor::close(){
 
 bool ServerRequestAcceptor::isAcceptable(HTTPRequest &request) const {
     if(!websocket::is_upgrade(request)) return false;
-    return this->listener != NULL ? this->listener->onIsAcceptable(request) : true;
+    return this->listener.onIsAcceptable(request);
 }
 
 void ServerRequestAcceptor::onAccept(HTTPWSResponse &response) const {
-    if(this->listener != NULL) this->listener->onAccept(response);
+    this->listener.onAccept(response);
 }

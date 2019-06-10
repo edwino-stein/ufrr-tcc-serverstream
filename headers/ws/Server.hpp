@@ -18,7 +18,7 @@
 
             public:
 
-                Server(const int port, ws::ServerListener * const listener);
+                Server(const int port, ws::ServerListener &listener);
                 virtual ~Server();
 
                 virtual void broadcast(IOBuffer &data);

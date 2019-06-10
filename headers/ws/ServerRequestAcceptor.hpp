@@ -20,7 +20,7 @@
 
             public:
 
-                ServerRequestAcceptor(const int port, ws::ServerListener * const listener);
+                ServerRequestAcceptor(const int port, ws::ServerListener &listener);
                 virtual ~ServerRequestAcceptor();
         };
     }

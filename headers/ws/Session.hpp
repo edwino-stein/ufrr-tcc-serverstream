@@ -10,7 +10,7 @@
 
             protected:
 
-                ws::SessionListener * const listener;
+                ws::SessionListener &listener;
                 ws::WSocket socket;
 
                 ws::SessionLifeCycle _readyState;
@@ -23,10 +23,10 @@
                 ws::SessionLifeCycle const &readyState;
                 ws::SessionMessageType const &type;
 
-                Session(ws::WSocket &&socket, ws::SessionListener * const listener);
+                Session(ws::WSocket &&socket, ws::SessionListener &listener);
                 virtual ~Session();
 
-                virtual void send(IOBuffer &data);
+                virtual void send(ws::IOBuffer &data);
                 virtual void setType(ws::SessionMessageType type);
 
                 virtual void run() override;
