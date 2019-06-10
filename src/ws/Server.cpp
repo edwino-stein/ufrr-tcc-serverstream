@@ -5,6 +5,7 @@
 #include <algorithm>
 
 using namespace ws;
+using namespace net;
 using runtime::LoopInside;
 using exceptions::Exception;
 

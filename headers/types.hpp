@@ -7,6 +7,8 @@
     #include <mutex>
     #include <queue>
 
+    #include <boost/asio.hpp>
+
     //Submodulos
     #include "ArduinoJson.h"
 
@@ -16,5 +18,15 @@
     using Mutex = std::mutex;
     template <class T> using Queue = std::queue<T>;
     namespace json = ArduinoJson;
+
+    //Boost.asio alias types
+    namespace net {
+        using tcp = boost::asio::ip::tcp;
+        using IOContext = boost::asio::io_context;
+        using Acceptor = tcp::acceptor;
+        using EndPoint = tcp::endpoint;
+        using TCPSocket = tcp::socket;
+        using TcpResolver = tcp::resolver;
+    };
 
 #endif

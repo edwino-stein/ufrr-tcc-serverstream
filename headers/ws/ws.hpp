@@ -9,13 +9,8 @@
         //Boost.beast alias types
         namespace http = boost::beast::http;
         namespace websocket = boost::beast::websocket;
-        using tcp = boost::asio::ip::tcp;
-        using TCPSocket = tcp::socket;
-        using WSocket = boost::beast::websocket::stream<tcp::socket>;
+        using WSocket = boost::beast::websocket::stream<net::TCPSocket>;
         using IOBuffer = boost::beast::multi_buffer;
-        using IOContext = boost::asio::io_context;
-        using EndPoint = tcp::endpoint;
-        using Acceptor = tcp::acceptor;
         using HTTPRequest = http::request<http::string_body>;
         using HTTPWSResponse = boost::beast::websocket::response_type;
         using FlatBuffer = boost::beast::flat_buffer;

@@ -9,9 +9,9 @@
 
             protected:
 
-                ws::IOContext ioCtx;
-                ws::EndPoint endPoint;
-                ws::Acceptor acceptor;
+                net::IOContext ioCtx;
+                net::EndPoint endPoint;
+                net::Acceptor acceptor;
 
                 virtual bool isAcceptable(ws::HTTPRequest &request) const;
                 virtual void onAccept(ws::HTTPWSResponse &response) const;

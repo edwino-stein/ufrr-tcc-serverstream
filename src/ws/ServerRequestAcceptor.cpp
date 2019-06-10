@@ -4,6 +4,7 @@
 #include "ws/ServerListener.hpp"
 
 using namespace ws;
+using namespace net;
 using exceptions::Exception;
 
 ServerRequestAcceptor::ServerRequestAcceptor(const int port, ws::ServerListener * const listener):
