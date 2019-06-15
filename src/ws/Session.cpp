@@ -8,9 +8,9 @@ using exceptions::WsErrorException;
 using boost::system::system_error;
 using boost::system::error_code;
 
-Session::Session(WSocket &&socket, SessionListener &listener) :
-    LoopInside(), listener(listener), socket(std::move(socket)),
-    readyState(_readyState), type(_type) {
+Session::Session(WSocket &&socket, SessionListener &listener, SessionMetaData md) :
+    LoopInside(), listener(listener), socket(std::move(socket)), _metaData(md),
+    readyState(_readyState), type(_type), metaData(_metaData) {
 
     this->_readyState = SessionLifeCycle::CONNECTING;
     this->setType(SessionMessageType::TEXT);

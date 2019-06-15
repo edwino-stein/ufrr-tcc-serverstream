@@ -2,6 +2,7 @@
 #include "ws/ServerCallback.hpp"
 #include "ws/Session.hpp"
 #include "ws/ServerListener.hpp"
+#include "ws/SessionMetaData.hpp"
 
 using namespace ws;
 using namespace net;
@@ -38,7 +39,7 @@ Session *ServerRequestAcceptor::accept(){
         }));
         ws.accept(request);
 
-        return new Session(std::move(ws), *this);
+        return new Session(std::move(ws), *this, SessionMetaData(ws, request));
     }
     catch(const std::exception& e){}
 

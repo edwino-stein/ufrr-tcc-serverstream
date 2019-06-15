@@ -104,12 +104,12 @@ bool Application::isValidPort(const unsigned int port) const {
 }
 
 void Application::onClose(Session &session, const int code){
-    std::cout << "Connection closed" << '\n';
+    std::cout << " * Connection closed: " << session.metaData.toString() <<'\n';
 }
 
 void Application::onConnection(Session &session){
     session.setType(ws::SessionMessageType::BINARY);
-    std::cout << "New connection" << '\n';
+    std::cout << " * New connection: " << session.metaData.toString() <<'\n';
 }
 
 bool Application::onIsAcceptable(HTTPRequest &request){
