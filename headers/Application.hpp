@@ -22,6 +22,7 @@
 
             //FFMPEG callback
             void onFfmpegReceive(unsigned char data[], const size_t length) override;
+            void onFfmpegError(exceptions::Exception& e) override;
 
             //Websocket callback
             void onMessage(ws::Session &session, ws::IOBuffer &data) override;

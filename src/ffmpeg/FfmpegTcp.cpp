@@ -24,7 +24,8 @@ void FfmpegTcp::loop(){
         );
     }
     catch (std::exception& e){
-        std::cerr << "Exception: " << e.what() << "\n";
+        Exception ex(e);
+        this->listener.onFfmpegError(ex);
         return;
     }
 

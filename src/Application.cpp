@@ -122,6 +122,14 @@ void Application::onFfmpegReceive(unsigned char data[], const size_t length){
     this->broadcastQueueMtx.unlock();
 }
 
+void Application::onFfmpegError(Exception& e) {
+    if(this->exitCode == 0){
+        std::cout << " * Error when receiving data from FFMPEG:" << e.what() << '\n';
+        std::cout << std::flush;
+        this->exitCode = 1;
+    }
+}
+
 bool Application::isValidPort(const unsigned int port) const {
     return (port > 0) && (port < 65535);
 }
