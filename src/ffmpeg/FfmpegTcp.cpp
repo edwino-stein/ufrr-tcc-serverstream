@@ -33,6 +33,8 @@ void FfmpegTcp::loop(){
 
 void FfmpegTcp::run(){
 
+    if(this->running) return;
+
     try{
         TcpResolver resolver(this->ioCtx);
         boost::asio::connect(this->socket, resolver.resolve(
@@ -41,8 +43,10 @@ void FfmpegTcp::run(){
         ));
     }
     catch (std::exception& e){
-        std::cerr << "Exception: " << e.what() << "\n";
-        return;
+        throw Exception(
+            "Erro ao conectar ao FFMPEG",
+            Exception(e)
+        );
     }
 
     LoopInside::run();

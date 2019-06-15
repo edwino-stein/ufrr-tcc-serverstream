@@ -9,6 +9,7 @@
 #include "runtime/LoopTask.hpp"
 #include "runtime/Signal.hpp"
 #include "runtime/Task.hpp"
+#include "exceptions/Exception.hpp"
 #include "exceptions/WsErrorException.hpp"
 
 using ws::Server;
@@ -20,9 +21,11 @@ using ffmpeg::FfmpegTcp;
 
 using runtime::Signal;
 using runtime::Task;
+using runtime::Thread;
+using exceptions::Exception;
 using exceptions::WsErrorException;
 
-Application::Application() : loop(true){}
+Application::Application() : exitCode(0){}
 Application::~Application(){}
 
 int Application::main(int argc, char const *argv[]){
@@ -36,18 +39,18 @@ int Application::main(int argc, char const *argv[]){
 
     unsigned int wsPort = std::atoi(argv[1]);
     if(!this->isValidPort(wsPort)){
-        std::cerr << "Invalid port for Websocket server" << '\n';
+        std::cerr << " * Invalid port for Websocket server" << '\n';
         return 1;
     }
 
     if(argc < 3){
-        std::cerr << "Missing port for FFMPEG TCP client" << '\n';
+        std::cerr << " * Missing port for FFMPEG TCP client" << '\n';
         return 1;
     }
 
     unsigned int ffmpegPort = std::atoi(argv[2]);
     if(!this->isValidPort(ffmpegPort)){
-        std::cerr << "Invalid port for FFMPEG TCP client" << '\n';
+        std::cerr << " * Invalid port for FFMPEG TCP client" << '\n';
         return 1;
     }
 
@@ -57,8 +60,8 @@ int Application::main(int argc, char const *argv[]){
     }
 
     Signal::attach(runtime::SIG::INT, Task([&me](runtime::TaskContext * const ctx){
-        std::cout << "* Received SIG::INT" << '\n';
-        me.loop = false;
+        std::cout << " * Received SIG::INT (" << (int) runtime::SIG::INT  << ")\n";
+        me.exitCode = 2;
     }));
 
     Server wsServer(wsPort, *this);
@@ -81,15 +84,35 @@ int Application::main(int argc, char const *argv[]){
 
     wsServer.run();
     broadcastTask.run();
-    ffmpeg.run();
+    bool ffmpegConnected = false;
 
-    while(this->loop);
+    while(this->exitCode == 0){
+
+        if(!ffmpegConnected){
+
+            std::cout << " * Trying to connect to FFMPEG..." << '\n';
+
+            try{
+                ffmpeg.run();
+                ffmpegConnected = true;
+            }
+            catch(Exception &e){
+                std::cout << e.what() << '\n';
+                Thread::sleep<std::chrono::seconds>(1);
+            }
+
+            if(ffmpegConnected) std::cout << " * Connected successfully with FFMPEG!" << '\n';
+        }
+
+        std::cout << std::flush;
+        Thread::sleep<std::chrono::milliseconds>(100);
+    }
 
     ffmpeg.stop();
     wsServer.stop();
     broadcastTask.stop(true);
 
-    return 0;
+    return this->exitCode;
 }
 
 void Application::onFfmpegReceive(unsigned char data[], const size_t length){

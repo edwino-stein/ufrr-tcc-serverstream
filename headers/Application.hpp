@@ -9,7 +9,7 @@
 
         private:
 
-            bool loop;
+            int exitCode;
             Mutex broadcastQueueMtx;
             Queue<ws::IOBuffer> broadcastQueue;
             bool isValidPort(const unsigned int port) const;
