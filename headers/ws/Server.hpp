@@ -23,6 +23,8 @@
 
                 virtual void broadcast(IOBuffer &data);
                 virtual void stop();
+
+                size_t totalSessions();
         };
     }
 

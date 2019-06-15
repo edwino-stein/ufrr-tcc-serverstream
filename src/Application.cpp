@@ -1,6 +1,8 @@
 #include "Application.hpp"
 
 #include <iostream>
+#include <sstream>
+#include <fstream>
 
 #include "ws/ws.hpp"
 #include "ws/Session.hpp"
@@ -25,7 +27,7 @@ using runtime::Thread;
 using exceptions::Exception;
 using exceptions::WsErrorException;
 
-Application::Application() : exitCode(0){}
+Application::Application() : exitCode(0), hasUpdate(true){}
 Application::~Application(){}
 
 int Application::main(int argc, char const *argv[]){
@@ -59,6 +61,12 @@ int Application::main(int argc, char const *argv[]){
         ffmpegBuffer = std::atoi(argv[3]);
     }
 
+    String statusFile;
+    if(argc >= 5){
+        statusFile = argv[4];
+        std::cout << " * Status output file: \"" << statusFile << "\"\n";
+    }
+
     Signal::attach(runtime::SIG::INT, Task([&me](runtime::TaskContext * const ctx){
         std::cout << " * Received SIG::INT (" << (int) runtime::SIG::INT  << ")\n";
         me.exitCode = 2;
@@ -84,7 +92,9 @@ int Application::main(int argc, char const *argv[]){
 
     wsServer.run();
     broadcastTask.run();
+
     bool ffmpegConnected = false;
+    this->onChangeStatus(statusFile, wsServer);
 
     while(this->exitCode == 0){
 
@@ -104,6 +114,7 @@ int Application::main(int argc, char const *argv[]){
             if(ffmpegConnected) std::cout << " * Connected successfully with FFMPEG!" << '\n';
         }
 
+        this->onChangeStatus(statusFile, wsServer);
         std::cout << std::flush;
         Thread::sleep<std::chrono::milliseconds>(100);
     }
@@ -113,6 +124,30 @@ int Application::main(int argc, char const *argv[]){
     broadcastTask.stop(true);
 
     return this->exitCode;
+}
+
+void Application::onChangeStatus(String const& outputFile, Server & wsServer){
+
+    if(outputFile.empty()) return;
+    if(!this->hasUpdate) return;
+
+    this->hasUpdate = false;
+
+    std::ostringstream json;
+
+    json << "{";
+    json << "\"watching\": " << wsServer.totalSessions();
+    json << "}";
+
+    std::fstream fout;
+    fout.open(outputFile, std::fstream::out | std::fstream::trunc);
+
+    if(fout.good()){
+        fout << json.str() << "\n";
+        fout.flush();
+    }
+
+    fout.close();
 }
 
 void Application::onFfmpegReceive(unsigned char data[], const size_t length){
@@ -136,11 +171,13 @@ bool Application::isValidPort(const unsigned int port) const {
 
 void Application::onClose(Session &session, const int code){
     std::cout << " * Connection closed: " << session.metaData.toString() <<'\n';
+    this->hasUpdate = true;
 }
 
 void Application::onConnection(Session &session){
     session.setType(ws::SessionMessageType::BINARY);
     std::cout << " * New connection: " << session.metaData.toString() <<'\n';
+    this->hasUpdate = true;
 }
 
 bool Application::onIsAcceptable(HTTPRequest &request){

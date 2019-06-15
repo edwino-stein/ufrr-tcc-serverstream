@@ -2,7 +2,7 @@
 logFile="/var/log/serverstream-daemon.log"
 pidFile="/var/run/serverstream-daemon.pid"
 prog='serverstream/build/serverstream'
-options="8088 8087 1024"
+options="8088 8087 1024 stats.json"
 invocation="$prog $options"
 
 pid=$$

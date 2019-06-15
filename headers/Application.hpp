@@ -3,6 +3,7 @@
 
     #include "types.hpp"
     #include "ws/ServerListener.hpp"
+    #include "ws/Server.hpp"
     #include "ffmpeg/FfmpegListener.hpp"
 
     class Application : public ws::ServerListener,  public ffmpeg::FfmpegListener {
@@ -14,11 +15,15 @@
             Queue<ws::IOBuffer> broadcastQueue;
             bool isValidPort(const unsigned int port) const;
 
+            bool hasUpdate;
+
         public:
 
             Application();
             virtual ~Application();
             int main(int argc, char const *argv[]);
+
+            void onChangeStatus(String const& outputFile, ws::Server &wsServer);
 
             //FFMPEG callback
             void onFfmpegReceive(unsigned char data[], const size_t length) override;

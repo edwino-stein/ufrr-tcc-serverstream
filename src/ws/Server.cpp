@@ -85,3 +85,16 @@ void Server::clearup(){
 
     toFree.clear();
 }
+
+size_t Server::totalSessions(){
+
+    size_t tSessions = 0;
+
+    this->sessionsMtx.lock();
+    for(Vector<Session *>::iterator it = this->sessions.begin(); it != this->sessions.end(); ++it){
+        if((*it)->readyState == SessionLifeCycle::OPEN) ++tSessions;
+    }
+    this->sessionsMtx.unlock();
+
+    return tSessions;
+}
