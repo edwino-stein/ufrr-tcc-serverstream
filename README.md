@@ -12,7 +12,7 @@ $ sudo cp deploy/serverstreamd.sh /etc/init.d/serverstreamd
 $ sudo chmod +x /etc/init.d/ffmpegd /etc/init.d/serverstreamd
 $ sudo chmod +x deploy/run-ffmpeg.sh deploy/run-serverstream.sh
 $ sudo update-rc.d ffmpegd defaults
-$ sudo update-rc.d serverstream defaults
+$ sudo update-rc.d serverstreamd defaults
 ```
 
 ### Remoção dos scritps para serviço
@@ -20,7 +20,7 @@ $ sudo update-rc.d serverstream defaults
 ```
 $ sudo service ffmpegd stop
 $ sudo update-rc.d ffmpegd remove
-$ sudo service serverstream stop
-$ sudo update-rc.d serverstream remove
+$ sudo service serverstreamd stop
+$ sudo update-rc.d serverstreamd remove
 $ sudo rm /etc/init.d/ffmpegd /etc/init.d/serverstreamd
 ```
